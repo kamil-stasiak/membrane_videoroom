@@ -7,8 +7,8 @@ export const AUDIO_TRACK_CONSTRAINTS: MediaTrackConstraints = {
 };
 
 export const VIDEO_TRACK_CONSTRAINTS: MediaTrackConstraints = {
-  width: { max: 1280, ideal: 1280, min: 1280 },
-  height: { max: 720, ideal: 720, min: 720 },
+  width: { max: 640, ideal: 640, min: 640 },
+  height: { max: 480, ideal: 480, min: 480 },
   frameRate: { max: 30, ideal: 24 },
 };
 
