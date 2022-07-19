@@ -146,15 +146,15 @@ export class Room {
   }
 
   public init = async () => {
-    const hasVideoInput: boolean = (
-      await navigator.mediaDevices.enumerateDevices()
-    ).some((device) => device.kind === "videoinput");
+    // const hasVideoInput: boolean = (
+    //   await navigator.mediaDevices.enumerateDevices()
+    // ).some((device) => device.kind === "videoinput");
 
     // Ask user for permissions if required
-    await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: hasVideoInput,
-    });
+    // await navigator.mediaDevices.getUserMedia({
+    //   audio: true,
+    //   video: hasVideoInput,
+    // });
 
     // Refresh mediaDevices list after ensuring permissions are granted
     // Before that, enumerateDevices() call would not return deviceIds
