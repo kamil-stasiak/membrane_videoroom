@@ -140,7 +140,7 @@ defmodule Videoroom.Room do
       handshake_opts: handshake_opts,
       log_metadata: [peer_id: peer.id],
       trace_context: state.trace_ctx,
-      webrtc_extensions: [Mid],
+      webrtc_extensions: [Mid, TWCC],
       peer_metadata: peer.metadata
     }
 
