@@ -21,11 +21,19 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-
-      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine", branch: "remove-fir-interval"},
-      {:membrane_rtp_plugin, github: "membraneframework/membrane_rtp_plugin", branch: "feat/bandwidth-est-stats", override: true},
-      # {:membrane_rtp_plugin, path: "../membrane_rtp_plugin", override: true},
-      {:membrane_webrtc_plugin, github: "membraneframework/membrane_webrtc_plugin", branch: "feat/bandwidth-est-stats", override: true},
+      {:membrane_rtc_engine,
+       github: "membraneframework/membrane_rtc_engine", branch: "remove-fir-interval"},
+      # {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
+      # {:membrane_rtc_engine, "~> 0.4.0"},
+      # {:membrane_rtp_plugin,
+      #  github: "membraneframework/membrane_rtp_plugin",
+      #  branch: "feat/bandwidth-est-stats",
+      #  override: true},
+      # # {:membrane_rtp_plugin, path: "../membrane_rtp_plugin", override: true},
+      # {:membrane_webrtc_plugin,
+      #  github: "membraneframework/membrane_webrtc_plugin",
+      #  branch: "feat/bandwidth-est-stats",
+      #  override: true},
       # {:membrane_webrtc_plugin, path: "../membrane_webrtc_plugin", override: true},
       {:plug_cowboy, "~> 2.5.2"},
       {:phoenix, "~> 1.6"},
@@ -39,10 +47,10 @@ defmodule VideoRoom.MixProject do
       {:cowlib, "~> 2.11.0", override: true},
 
       # Otel
-      {:opentelemetry, "~> 1.0"},
-      {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_exporter, "~> 1.0"},
-      {:opentelemetry_zipkin, "~> 1.0"},
+      {:opentelemetry, "~> 1.0", override: true},
+      {:opentelemetry_api, "~> 1.0", override: true},
+      {:opentelemetry_exporter, "~> 1.0", override: true},
+      {:opentelemetry_zipkin, "~> 1.0", override: true},
 
       # Benchmarks
       {:beamchmark, "~> 0.1.0", only: :benchmark},
