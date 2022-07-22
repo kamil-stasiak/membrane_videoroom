@@ -4,16 +4,20 @@ defmodule Videoroom.Room do
   use GenServer
 
   alias Membrane.RTC.Engine
-  alias Membrane.RTC.Engine.Message
+  alias Membrane.RTC.Engine.{Message, Peer}
   alias Membrane.RTC.Engine.MediaEvent
   alias Membrane.RTC.Engine.Endpoint.WebRTC
   alias Membrane.ICE.TURNManager
   alias Membrane.WebRTC.Extension.{Mid, Rid, TWCC}
+  alias Videoroom.Room.FileRTPEndpoint
+  alias ExSDP.Attribute.FMTP
 
   require Membrane.Logger
   require Membrane.OpenTelemetry
 
   @mix_env Mix.env()
+  @peer_id "test_video"
+  @timeout 5_000
 
   def start(init_arg, opts) do
     GenServer.start(__MODULE__, init_arg, opts)
@@ -110,6 +114,69 @@ defmodule Videoroom.Room do
   end
 
   @impl true
+  def handle_info(
+        {:tracks_added, endpoint_pid},
+        state
+      ) do
+    IO.inspect(:tracks_added)
+    Process.send_after(self(), {:start, endpoint_pid}, @timeout)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(
+        {:start, endpoint_pid},
+        state
+      ) do
+    send(endpoint_pid, :start)
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(
+        :add_file_peer,
+        state
+      ) do
+    Engine.receive_media_event(
+      state.rtc_engine,
+      {:media_event, @peer_id,
+       "{\"type\":\"join\",\"data\":{\"metadata\":{\"displayName\":\"#{@peer_id}\"}}}"}
+    )
+
+    {:noreply, state}
+  end
+
+  @impl true
+  def handle_info(
+        %Message.NewPeer{rtc_engine: rtc_engine, peer: %{id: "test_video"} = peer},
+        state
+      ) do
+    Membrane.Logger.info("New peer: #{inspect(peer)}. Accepting.")
+
+    track =
+      Engine.Track.new(
+        :video,
+        "test-stream",
+        peer.id,
+        :H264,
+        nil,
+        [:RTP],
+        %FMTP{pt: 96}
+      )
+
+    endpoint = %FileRTPEndpoint{
+      rtc_engine: rtc_engine,
+      file_path: Path.join("./fixtures/", "video.h264"),
+      track: track,
+      owner: self()
+    }
+
+    Engine.accept_peer(rtc_engine, peer.id)
+    :ok = Engine.add_endpoint(rtc_engine, endpoint, peer_id: peer.id)
+    {:noreply, state}
+  end
+
+  @impl true
   def handle_info(%Message.NewPeer{rtc_engine: rtc_engine, peer: peer}, state) do
     Membrane.Logger.info("New peer: #{inspect(peer)}. Accepting.")
     peer_channel_pid = Map.get(state.peer_channels, peer.id)
@@ -146,6 +213,8 @@ defmodule Videoroom.Room do
 
     Engine.accept_peer(rtc_engine, peer.id)
     :ok = Engine.add_endpoint(rtc_engine, endpoint, peer_id: peer.id, node: peer_node)
+
+    Process.send_after(self(), :add_file_peer, 5_000)
 
     {:noreply, state}
   end

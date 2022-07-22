@@ -56,7 +56,10 @@ defmodule VideoRoom.MixProject do
       {:beamchmark, "~> 0.1.0", only: :benchmark},
       {:stampede, github: "geometerio/stampede-elixir", only: :benchmark},
       {:httpoison, "~> 1.8", only: :benchmark},
-      {:poison, "~> 5.0.0", only: :benchmark}
+      {:poison, "~> 5.0.0", only: :benchmark},
+
+      # File_endpoint
+      {:membrane_realtimer_plugin, "~> 0.5.0"}
     ]
   end
 
