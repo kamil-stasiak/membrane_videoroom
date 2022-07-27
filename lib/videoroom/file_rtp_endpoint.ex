@@ -32,7 +32,7 @@ defmodule Videoroom.Room.FileRTPEndpoint do
 
   def_output_pad(:output,
     demand_unit: :buffers,
-    caps: {H264, stream_format: :byte_stream},
+    caps: :any,
     availability: :on_request
   )
 
@@ -55,6 +55,13 @@ defmodule Videoroom.Room.FileRTPEndpoint do
   end
 
   @impl true
+  def handle_process(Pad.ref(:output, pad), %Membrane.Buffer{} = buffer, ctx, state) do
+    IO.inspect(buffer, :buffer)
+
+    {{:ok, forward: buffer}, state}
+  end
+
+  @impl true
   def handle_pad_added(Pad.ref(:output, {track_id, _rid}) = pad, _ctx, state) do
     spec = %ParentSpec{
       children: %{
@@ -64,15 +71,18 @@ defmodule Videoroom.Room.FileRTPEndpoint do
         parser: %Membrane.H264.FFmpeg.Parser{
           attach_nalus?: true,
           skip_until_parameters?: false,
-          framerate: {60, 1}
+          framerate: {60, 1},
+          alignment: :nal
         },
+        # payloader: Membrane.RTP.H264.Payloader,
         rtp: Membrane.RTP.SessionBin,
         realtimer: Membrane.Realtimer
       },
       links: [
         link(:source)
         |> to(:parser)
-        |> via_in(Pad.ref(:input, 10))
+        # |> to(:payloader)
+        |> via_in(Pad.ref(:input, 10), options: [payloader: Membrane.RTP.H264.Payloader])
         |> to(:rtp)
         |> via_out(Pad.ref(:rtp_output, 10), options: [encoding: :H264])
         |> to(:realtimer)

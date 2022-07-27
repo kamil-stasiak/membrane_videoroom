@@ -23,6 +23,7 @@ defmodule VideoRoom.MixProject do
     [
       {:membrane_rtc_engine,
        github: "membraneframework/membrane_rtc_engine", branch: "remove-fir-interval"},
+      # {:membrane_rtc_engine, path: "~/dev/membrane_rtc_engine"},
       # {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
       # {:membrane_rtc_engine, "~> 0.4.0"},
       # {:membrane_rtp_plugin,
@@ -59,7 +60,8 @@ defmodule VideoRoom.MixProject do
       {:poison, "~> 5.0.0", only: :benchmark},
 
       # File_endpoint
-      {:membrane_realtimer_plugin, "~> 0.5.0"}
+      {:membrane_realtimer_plugin, "~> 0.5.0"},
+      {:membrane_rtp_h264_plugin, "~> 0.13.0"}
     ]
   end
 
