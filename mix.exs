@@ -21,16 +21,13 @@ defmodule VideoRoom.MixProject do
 
   defp deps do
     [
-      {:membrane_rtc_engine,
-       github: "membraneframework/membrane_rtc_engine", branch: "remove-fir-interval"},
-      # {:membrane_rtc_engine, path: "~/dev/membrane_rtc_engine"},
-      # {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
+      # {:membrane_rtc_engine,github: "membraneframework/membrane_rtc_engine", branch: "remove-fir-interval"},
+      {:membrane_rtc_engine, github: "membraneframework/membrane_rtc_engine"},
       # {:membrane_rtc_engine, "~> 0.4.0"},
       # {:membrane_rtp_plugin,
       #  github: "membraneframework/membrane_rtp_plugin",
       #  branch: "feat/bandwidth-est-stats",
       #  override: true},
-      # # {:membrane_rtp_plugin, path: "../membrane_rtp_plugin", override: true},
       # {:membrane_webrtc_plugin,
       #  github: "membraneframework/membrane_webrtc_plugin",
       #  branch: "feat/bandwidth-est-stats",

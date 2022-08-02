@@ -69,23 +69,32 @@ defmodule Videoroom.Room.FileRTPEndpoint do
           location: state.file_path
         },
         parser: %Membrane.H264.FFmpeg.Parser{
-          attach_nalus?: true,
-          skip_until_parameters?: false,
-          framerate: {60, 1},
+          framerate: {24, 1},
           alignment: :nal
         },
-        # payloader: Membrane.RTP.H264.Payloader,
-        rtp: Membrane.RTP.SessionBin,
+        payloader_bin: %Membrane.RTP.PayloaderBin{
+          payloader: Membrane.RTP.H264.Payloader,
+          ssrc: 10,
+          payload_type: state.track.fmtp.pt,
+          clock_rate: 90_000
+        },
+        # rtp: %Membrane.RTP.SessionBin{},
         realtimer: Membrane.Realtimer
       },
       links: [
         link(:source)
         |> to(:parser)
-        # |> to(:payloader)
-        |> via_in(Pad.ref(:input, 10), options: [payloader: Membrane.RTP.H264.Payloader])
-        |> to(:rtp)
-        |> via_out(Pad.ref(:rtp_output, 10), options: [encoding: :H264])
         |> to(:realtimer)
+        |> to(:payloader_bin)
+        # |> via_in(Pad.ref(:input, 10), options: [payloader: Membrane.RTP.H264.Payloader])
+        # |> to(:rtp)
+        # |> via_out(Pad.ref(:output, 10),
+        #   options: [
+        #     depayloader: nil,
+        #     encoding: :H264,
+        #     clock_rate: 90_000
+        #   ]
+        # )
         |> to_bin_output(pad)
       ]
     }

@@ -137,6 +137,8 @@ defmodule Videoroom.Room do
         :add_file_peer,
         state
       ) do
+    IO.inspect(:add_file_peer)
+
     Engine.receive_media_event(
       state.rtc_engine,
       {:media_event, @peer_id,
@@ -148,7 +150,7 @@ defmodule Videoroom.Room do
 
   @impl true
   def handle_info(
-        %Message.NewPeer{rtc_engine: rtc_engine, peer: %{id: "test_video"} = peer},
+        %Message.NewPeer{rtc_engine: rtc_engine, peer: %{id: @peer_id} = peer},
         state
       ) do
     Membrane.Logger.info("New peer: #{inspect(peer)}. Accepting.")
@@ -161,12 +163,13 @@ defmodule Videoroom.Room do
         :H264,
         nil,
         [:RTP],
-        %FMTP{pt: 96}
+        %FMTP{pt: 127}
       )
 
     endpoint = %FileRTPEndpoint{
       rtc_engine: rtc_engine,
-      file_path: Path.join("./fixtures/", "video.h264"),
+      file_path: Path.join("./fixtures/", "video_baseline.h264"),
+      # file_path: Path.join("./fixtures/", "video.rtp"),
       track: track,
       owner: self()
     }
@@ -198,6 +201,8 @@ defmodule Videoroom.Room do
         ]
       end
 
+    Engine.accept_peer(rtc_engine, peer.id)
+
     endpoint = %WebRTC{
       rtc_engine: rtc_engine,
       ice_name: peer.id,
@@ -211,7 +216,6 @@ defmodule Videoroom.Room do
       peer_metadata: peer.metadata
     }
 
-    Engine.accept_peer(rtc_engine, peer.id)
     :ok = Engine.add_endpoint(rtc_engine, endpoint, peer_id: peer.id, node: peer_node)
 
     Process.send_after(self(), :add_file_peer, 5_000)
