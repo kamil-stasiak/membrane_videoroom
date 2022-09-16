@@ -206,7 +206,7 @@ export class Room {
   }
 
   public init = async () => {
-    await this.askForPermissions();
+    //await this.askForPermissions();
 
     // Refresh mediaDevices list after ensuring permissions are granted
     // Before that, enumerateDevices() call would not return deviceIds
