@@ -150,7 +150,7 @@ defmodule Videoroom.Room do
       integrated_turn_options: state.network_options[:integrated_turn_options],
       integrated_turn_domain: state.network_options[:integrated_turn_domain],
       handshake_opts: handshake_opts,
-      log_metadata: [peer_id: peer.id],
+      log_metadata: [rtc_engine: state.room_id],
       trace_context: state.trace_ctx,
       webrtc_extensions: webrtc_extensions,
       simulcast_config: %SimulcastConfig{
