@@ -9,7 +9,7 @@ defmodule Videoroom.Room do
   alias Membrane.RTC.Engine.Endpoint.WebRTC
   alias Membrane.RTC.Engine.Endpoint.WebRTC.SimulcastConfig
   alias Membrane.ICE.TURNManager
-  alias Membrane.WebRTC.Extension.{Mid, Rid, TWCC}
+  alias Membrane.WebRTC.Extension.{Mid, Rid, TWCC, VAD}
 
   require Membrane.Logger
   require Membrane.OpenTelemetry
@@ -138,9 +138,9 @@ defmodule Videoroom.Room do
 
     webrtc_extensions =
       if state.simulcast? do
-        [Mid, Rid, TWCC]
+        [Mid, Rid, TWCC, VAD]
       else
-        [TWCC]
+        [TWCC, VAD]
       end
 
     endpoint = %WebRTC{
@@ -157,7 +157,8 @@ defmodule Videoroom.Room do
         enabled: state.simulcast?,
         initial_target_variant: fn _track -> :medium end
       },
-      peer_metadata: peer.metadata
+      peer_metadata: peer.metadata,
+      video_tracks_limit: 1
     }
 
     Engine.accept_peer(rtc_engine, peer.id)

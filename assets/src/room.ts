@@ -147,7 +147,7 @@ export class Room {
             setCameraIndicator(ctx.peer.id, ctx.metadata.active);
           }
         },
-        onTrackAdded: (_ctx) => {},
+        onTrackAdded: (_ctx) => { },
         onTrackRemoved: (ctx) => {
           if (ctx.metadata.type === "screensharing") {
             detachScreensharing(ctx.peer.id);
@@ -182,7 +182,7 @@ export class Room {
           removeVideoElement(peer.id);
           this.updateParticipantsList();
         },
-        onPeerUpdated: (_ctx) => {},
+        onPeerUpdated: (_ctx) => { },
         onTrackEncodingChanged: (
           peerId: string,
           _trackId: string,
@@ -234,10 +234,34 @@ export class Room {
       }
     }
 
+    // try {
+    //   this.localAudioStream = await navigator.mediaDevices.getUserMedia({
+    //     audio: AUDIO_TRACK_CONSTRAINTS,
+    //   });
+    // } catch (error) {
+    //   console.error("Error while getting local audio stream", error);
+    // }
+
     try {
-      this.localAudioStream = await navigator.mediaDevices.getUserMedia({
-        audio: AUDIO_TRACK_CONSTRAINTS,
-      });
+      // this.localAudioStream = await navigator.mediaDevices.getUserMedia({
+      //   audio: AUDIO_TRACK_CONSTRAINTS,
+      // });
+
+      // Testing audio
+      const audio = new Audio(
+        "https://upload.wikimedia.org/wikipedia/en/d/dc/Strawberry_Fields_Forever_(Beatles_song_-_sample).ogg"
+      );
+      audio.loop = true;
+      audio.crossOrigin = "anonymous";
+      await audio.play();
+
+      const stream: MediaStream | null = audio.captureStream
+        ? audio.captureStream()
+        : audio.mozCaptureStream
+          ? audio.mozCaptureStream()
+          : null;
+
+      this.localAudioStream = stream;
     } catch (error) {
       console.error("Error while getting local audio stream", error);
     }
