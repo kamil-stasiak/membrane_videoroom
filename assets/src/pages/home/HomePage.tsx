@@ -7,6 +7,11 @@ import { Checkbox, Props as CheckboxProps } from "./Checkbox";
 import { useToggle } from "../room/hooks/useToggle";
 import { useMediaDeviceManager } from "../room/hooks/useMediaDeviceManager";
 
+export type Device = {
+  id: string;
+  label: string;
+};
+
 export const HomePage: FC = () => {
   const deviceManager = useMediaDeviceManager({ askOnMount: true });
 
@@ -21,7 +26,7 @@ export const HomePage: FC = () => {
   const lastDisplayName: string | null = localStorage.getItem("displayName");
   const [displayNameInput, setDisplayNameInput] = useState<string>(lastDisplayName || "");
 
-  const [autostartCameraAndMicInput, setAutostartCameraAndMicCheckbox] = useToggle(true);
+  const [autostartCameraAndMicInput, setAutostartCameraAndMicCheckbox] = useToggle(false);
 
   const simulcastParam: string = searchParams?.get("simulcast") || "";
   const simulcastDefaultValue: boolean = simulcastParam === "true";

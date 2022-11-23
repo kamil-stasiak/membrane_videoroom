@@ -20,6 +20,9 @@ const showMediaDevicesPrompt = (constraints: MediaStreamConstraints, onSuccess: 
 
 export const useMediaDeviceManager = ({ askOnMount }: MediaDeviceManagerConfig = {}) => {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+  const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [audioOutputDevices, setAudioOutputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [videoInputDevices, setVideoInputDevices] = useState<MediaDeviceInfo[]>([]);
   const [asked, setAsked] = useState(!askOnMount);
   const [audioPermissionGranted, setAudioPermissionGranted] = useState<boolean | null>(null);
   const [videoPermissionGranted, setVideoPermissionGranted] = useState<boolean | null>(null);
@@ -28,6 +31,14 @@ export const useMediaDeviceManager = ({ askOnMount }: MediaDeviceManagerConfig =
   useEffect(() => {
     navigator.mediaDevices.enumerateDevices().then((mediaDevices) => {
       setDevices(mediaDevices);
+      const audioInput = mediaDevices.filter((device) => device.kind === "audioinput");
+      setAudioInputDevices(audioInput);
+
+      const audioOutput = mediaDevices.filter((device) => device.kind === "audiooutput");
+      setAudioOutputDevices(audioOutput);
+
+      const video = mediaDevices.filter((device) => device.kind === "videoinput");
+      setVideoInputDevices(video);
     });
   }, []);
 
@@ -85,5 +96,14 @@ export const useMediaDeviceManager = ({ askOnMount }: MediaDeviceManagerConfig =
     setAsked(true);
   }, [devices, audioPermissionGranted, videoPermissionGranted, asked, askForPermissions]);
 
-  return { devices, audioPermissionGranted, videoPermissionGranted, errorMessage, askForPermissions };
+  return {
+    devices,
+    audioPermissionGranted,
+    videoPermissionGranted,
+    errorMessage,
+    askForPermissions,
+    audioInputDevices,
+    audioOutputDevices,
+    videoInputDevices,
+  };
 };

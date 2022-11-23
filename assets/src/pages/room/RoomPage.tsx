@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useState } from "react";
 import { AUDIO_TRACKS_CONFIG, SCREEN_SHARING_TRACKS_CONFIG, VIDEO_TRACKS_CONFIG } from "./consts";
 import { useMembraneClient } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
@@ -9,6 +9,9 @@ import { getRandomAnimalEmoji } from "./utils";
 import { useStreamManager } from "./hooks/useStreamManager";
 import { StreamingMode } from "./hooks/useMembraneMediaStreaming";
 import { useAcquireWakeLockAutomatically } from "./hooks/useAcquireWakeLockAutomatically";
+import { useMediaDeviceManager } from "./hooks/useMediaDeviceManager";
+import { DeviceSelector } from "./components/DeviceSelector";
+import { useSelectMediaDevice } from "./hooks/useSelectMediaDevice";
 
 type Props = {
   displayName: string;
@@ -22,6 +25,10 @@ export type SetErrorMessage = (value: string) => void;
 
 const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, autostartStreaming }: Props) => {
   const wakeLock = useAcquireWakeLockAutomatically();
+  const deviceManager = useMediaDeviceManager();
+
+  const videoInputs = useSelectMediaDevice(deviceManager?.videoInputDevices || []);
+  const audioInputs = useSelectMediaDevice(deviceManager?.audioInputDevices || []);
 
   const mode: StreamingMode = manualMode ? "manual" : "automatic";
 
@@ -75,6 +82,9 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
             <span className="ml-2">Is WakeLock supported: {wakeLock.isSupported ? "🟢" : "🔴"}</span>
           </div>
         )}
+
+        <DeviceSelector options={videoInputs.devices} setDeviceId={videoInputs.setDevice} />
+        <DeviceSelector options={audioInputs.devices} setDeviceId={audioInputs.setDevice} />
 
         <section className="flex flex-col h-screen mb-14">
           <header className="p-4">
