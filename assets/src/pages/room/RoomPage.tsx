@@ -1,5 +1,4 @@
 import React, { FC, useState } from "react";
-import { AUDIO_TRACKS_CONFIG, SCREEN_SHARING_TRACKS_CONFIG, VIDEO_TRACKS_CONFIG } from "./consts";
 import { useMembraneClient } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
 import { PeerMetadata, RemotePeer, usePeersState } from "./hooks/usePeerState";
@@ -44,33 +43,25 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
 
   const camera = useStreamManager(
     "camera",
+    videoInputs.deviceId,
     mode,
     isConnected,
     isSimulcastOn,
     webrtc,
-    VIDEO_TRACKS_CONFIG,
     peerApi,
     autostartStreaming
   );
   const audio = useStreamManager(
     "audio",
+    audioInputs.deviceId,
     mode,
     isConnected,
     isSimulcastOn,
     webrtc,
-    AUDIO_TRACKS_CONFIG,
     peerApi,
     autostartStreaming
   );
-  const screenSharing = useStreamManager(
-    "screensharing",
-    mode,
-    isConnected,
-    isSimulcastOn,
-    webrtc,
-    SCREEN_SHARING_TRACKS_CONFIG,
-    peerApi
-  );
+  const screenSharing = useStreamManager("screensharing", null, mode, isConnected, isSimulcastOn, webrtc, peerApi);
 
   return (
     <section>
@@ -83,8 +74,8 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
           </div>
         )}
 
-        <DeviceSelector options={videoInputs.devices} setDeviceId={videoInputs.setDevice} />
-        <DeviceSelector options={audioInputs.devices} setDeviceId={audioInputs.setDevice} />
+        <DeviceSelector options={videoInputs.devices} setDeviceId={videoInputs.setDeviceId} />
+        <DeviceSelector options={audioInputs.devices} setDeviceId={audioInputs.setDeviceId} />
 
         <section className="flex flex-col h-screen mb-14">
           <header className="p-4">

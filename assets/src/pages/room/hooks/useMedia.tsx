@@ -26,7 +26,11 @@ const stopTracks = (stream: MediaStream) => {
   });
 };
 
-export const useMediaDevice = (config: Config, mediaStreamSupplier: () => Promise<MediaStream>): UseMediaResult => {
+export const useMediaDevice = (
+  config: Config,
+  deviceId: string | null,
+  mediaStreamSupplier: () => Promise<MediaStream>
+): UseMediaResult => {
   const [state, setState] = useState<State>({
     isError: false,
     isSuccess: true,
@@ -81,6 +85,7 @@ export const useMediaDevice = (config: Config, mediaStreamSupplier: () => Promis
   const startStream = useCallback((): Promise<MediaStream> => {
     return mediaStreamSupplier()
       .then((stream: MediaStream) => {
+        console.log({ name: "Stream", stream });
         setupTrackCallbacks(stream);
         setSuccessfulState(stream);
         return stream;
@@ -109,9 +114,13 @@ export const useMediaDevice = (config: Config, mediaStreamSupplier: () => Promis
     [state.stream, setState] // todo
   );
 
+  // every device id change
   useEffect(() => {
-    if (!config.startOnMount) return;
+    console.log("every Device Id change: start");
+    if (deviceId === null) return;
+    // if (!config.startOnMount) return;
 
+    console.log({ name: "Every DeviceId change", deviceId });
     const promise = startStream();
     return () => {
       promise
@@ -122,7 +131,7 @@ export const useMediaDevice = (config: Config, mediaStreamSupplier: () => Promis
           // empty
         });
     };
-  }, []);
+  }, [deviceId]);
 
   useEffect(() => {
     const stream = state.stream;
@@ -170,7 +179,7 @@ export const useMediaDevice = (config: Config, mediaStreamSupplier: () => Promis
 };
 
 export class MediaStreamConfig {
-  private type = "MediaStreamConfig";
+  private readonly type = "MediaStreamConfig";
 
   constructor(public constraints: MediaStreamConstraints) {
     this.constraints = constraints;
@@ -178,7 +187,7 @@ export class MediaStreamConfig {
 }
 
 export class DisplayMediaStreamConfig {
-  private type = "DisplayMediaStreamConfig";
+  private readonly type = "DisplayMediaStreamConfig";
 
   constructor(public constraints: DisplayMediaStreamConstraints) {
     this.constraints = constraints;
@@ -187,13 +196,14 @@ export class DisplayMediaStreamConfig {
 
 export const useMedia = (
   config: MediaStreamConfig | DisplayMediaStreamConfig,
+  deviceId: string | null,
   startOnMount = false
 ): UseMediaResult => {
   const mediaStreamSupplier = useCallback(() => {
     return config instanceof DisplayMediaStreamConfig
       ? navigator.mediaDevices.getDisplayMedia(config.constraints)
       : navigator.mediaDevices.getUserMedia(config.constraints);
-  }, [config]);
+  }, [config, deviceId]);
 
-  return useMediaDevice({ startOnMount }, mediaStreamSupplier);
+  return useMediaDevice({ startOnMount }, deviceId, mediaStreamSupplier);
 };

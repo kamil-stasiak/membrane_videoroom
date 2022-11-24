@@ -10,18 +10,18 @@ export const useSelectMediaDevice = (mediaDevices: MediaDeviceInfo[]) => {
     id: device.deviceId,
     label: device.label,
   }));
-  const [device, setDevice] = useState<string | null>(null);
-
-  // useEffect(() => {
-  //   console.log({ name: "currentInput", device });
-  // }, [device]);
+  const [deviceId, setDeviceId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (mediaDevices.length === 0) return;
-    if (device) return;
+    console.log({ name: "currentInput", deviceId });
+  }, [deviceId]);
 
-    setDevice(mediaDevices[0].deviceId);
-  }, [mediaDevices, device, setDevice]);
+  // useEffect(() => {
+  //   if (mediaDevices.length === 0) return;
+  //   if (deviceId) return;
+  //
+  //   setDevice(mediaDevices[0].deviceId);
+  // }, [mediaDevices, deviceId, setDevice]);
 
-  return { devices, setDevice, device };
+  return { devices, setDeviceId, deviceId };
 };
