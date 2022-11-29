@@ -1,11 +1,12 @@
-import React, { FC, useContext, useState } from "react";
+import React, { FC, useContext, useEffect, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { UserContext } from "../../contexts/userContext";
 import clsx from "clsx";
 import { DeveloperContext } from "../../contexts/developerContext";
 import { Checkbox, Props as CheckboxProps } from "./Checkbox";
 import { useToggle } from "../room/hooks/useToggle";
-import { useMediaDeviceManager } from "../room/hooks/useMediaDeviceManager";
+import { useMediaDeviceManager2 } from "../room/hooks/useMediaDeviceManager2";
+import { useBooleanDebounce } from "../room/hooks/useBooleanDebounce";
 
 export type Device = {
   id: string;
@@ -13,7 +14,18 @@ export type Device = {
 };
 
 export const HomePage: FC = () => {
-  const deviceManager = useMediaDeviceManager({ askOnMount: true });
+  // const deviceManager = useMediaDeviceManager({ askOnMount: true });
+  //
+  // const deviceManager = useMediaDeviceManager2();
+  // useEffect(() => {
+  //   console.log({ name: "devices", d: deviceManager });
+  // }, [deviceManager]);
+  //
+  // const booleanDebounce = useBooleanDebounce(deviceManager.isPermissionManagerWindowDisplayed, 300, 0);
+
+  // useEffect(() => {
+  //   console.log({ name: "useDebounce", booleanDebounce });
+  // }, [booleanDebounce]);
 
   const match = useParams();
   const [searchParams] = useSearchParams();
@@ -59,9 +71,18 @@ export const HomePage: FC = () => {
 
   return (
     <section>
-      {deviceManager.errorMessage && (
-        <div className="bg-red-700 text-white p-1 w-full">{deviceManager.errorMessage}</div>
-      )}
+      {/*<div*/}
+      {/*  className={clsx({*/}
+      {/*    "text-white p-1 w-full": true,*/}
+      {/*    "bg-green-700": !deviceManager.isPermissionManagerWindowDisplayed,*/}
+      {/*    "bg-yellow-700": deviceManager.isPermissionManagerWindowDisplayed,*/}
+      {/*  })}*/}
+      {/*>*/}
+      {/*  <button onClick={() => deviceManager.listDevices()}>Enumerate devices</button>*/}
+      {/*</div>*/}
+
+      {/*{deviceManager.error && <div className="bg-red-700 text-white p-1 w-full">{deviceManager.error}</div>}*/}
+      {/*{booleanDebounce && <div className="bg-purple-700 text-white p-1 w-full">Text overlay</div>}*/}
       <div className="p-8 flex flex-col items-center">
         <div className="mb-4">
           <img src="/svg/logo.svg" className="mb-2" alt="logo" />

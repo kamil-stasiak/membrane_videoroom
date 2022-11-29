@@ -12,16 +12,16 @@ export const useSelectMediaDevice = (mediaDevices: MediaDeviceInfo[]) => {
   }));
   const [deviceId, setDeviceId] = useState<string | null>(null);
 
-  useEffect(() => {
-    console.log({ name: "currentInput", deviceId });
-  }, [deviceId]);
-
   // useEffect(() => {
-  //   if (mediaDevices.length === 0) return;
-  //   if (deviceId) return;
-  //
-  //   setDevice(mediaDevices[0].deviceId);
-  // }, [mediaDevices, deviceId, setDevice]);
+  //   console.log({ name: "currentInput", deviceId });
+  // }, [deviceId]);
+
+  useEffect(() => {
+    if (mediaDevices.length === 0) return;
+    if (deviceId) return;
+
+    setDeviceId(mediaDevices[0].deviceId);
+  }, [mediaDevices, deviceId, setDeviceId]);
 
   return { devices, setDeviceId, deviceId };
 };

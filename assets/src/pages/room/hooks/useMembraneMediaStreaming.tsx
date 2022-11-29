@@ -29,6 +29,8 @@ export const useMembraneMediaStreaming = (
 
   const addTracks = useCallback(
     (stream: MediaStream) => {
+      // console.log({ name: "addTracks" });
+
       if (!webrtc) return;
       const tracks = type === "audio" ? stream.getAudioTracks() : stream.getVideoTracks();
 
@@ -42,12 +44,15 @@ export const useMembraneMediaStreaming = (
       );
 
       setTracksId((prevState) => [...prevState, ...tracksId]);
+      // console.log({ name: "addTracks - tracks added", tracks });
+
       setTrackMetadata(defaultTrackMetadata);
     },
     [defaultTrackMetadata, simulcast, type, webrtc]
   );
 
   const removeTracks = useCallback(() => {
+    // console.log({ name: "removeTracks", tracksId });
     setTracksId([]);
     tracksId.forEach((trackId) => {
       webrtc?.removeTrack(trackId);

@@ -1,24 +1,26 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { VIDEO_TRACK_CONSTRAINTS } from "../consts";
 
 export type UseMediaResult = State & Api;
 
 type State = {
-  isError: boolean;
-  isSuccess: boolean;
-  stream?: MediaStream;
-  isEnabled: boolean;
+  isError: boolean; // todo remove
+  isSuccess: boolean; // todo remove
+  stream?: MediaStream; // important
+  isEnabled: boolean; // important
 };
 
 export type Api = {
   start: () => void;
-  stop: () => void;
+  stop: () => Promise<void>;
   enable: () => void;
   disable: () => void;
+  startWithId: (id: string) => Promise<MediaStream>;
 };
-
-type Config = {
-  startOnMount: boolean;
-};
+//
+// type Config = {
+//   startOnMount: boolean;
+// };
 
 const stopTracks = (stream: MediaStream) => {
   stream.getTracks().forEach((track) => {
@@ -27,7 +29,7 @@ const stopTracks = (stream: MediaStream) => {
 };
 
 export const useMediaDevice = (
-  config: Config,
+  // config: Config,
   deviceId: string | null,
   mediaStreamSupplier: () => Promise<MediaStream>
 ): UseMediaResult => {
@@ -40,9 +42,10 @@ export const useMediaDevice = (
 
   const [api, setApi] = useState<Api>({
     start: () => {},
-    stop: () => {},
+    stop: () => Promise.resolve(),
     enable: () => {},
     disable: () => {},
+    startWithId: (id: string) => Promise.reject(),
   });
 
   // rename to clearState or sth
@@ -85,7 +88,7 @@ export const useMediaDevice = (
   const startStream = useCallback((): Promise<MediaStream> => {
     return mediaStreamSupplier()
       .then((stream: MediaStream) => {
-        console.log({ name: "Stream", stream });
+        // console.log({ name: "Stream", stream });
         setupTrackCallbacks(stream);
         setSuccessfulState(stream);
         return stream;
@@ -98,6 +101,32 @@ export const useMediaDevice = (
         return Promise.reject();
       });
   }, [mediaStreamSupplier, setupTrackCallbacks, setSuccessfulState, setErrorState]); // todo add media stream supplier
+
+  const startStream2 = useCallback(
+    (id: string): Promise<MediaStream> => {
+      return navigator.mediaDevices
+        .getUserMedia({
+          video: {
+            ...VIDEO_TRACK_CONSTRAINTS,
+            deviceId: id,
+          },
+        })
+        .then((stream: MediaStream) => {
+          console.log({ name: "Stream", stream });
+          setupTrackCallbacks(stream);
+          setSuccessfulState(stream);
+          return stream;
+        })
+        .catch((error) => {
+          // this callback fires up when
+          // - user didn't grant permission to camera
+          // - user clicked "Cancel" instead of "Share" on Screen Sharing menu ("Chose what to share" in Google Chrome)
+          setErrorState();
+          return Promise.reject();
+        });
+    },
+    [mediaStreamSupplier, setupTrackCallbacks, setSuccessfulState, setErrorState]
+  ); // todo add media stream supplier
 
   const setEnable = useCallback(
     (status: boolean) => {
@@ -115,23 +144,23 @@ export const useMediaDevice = (
   );
 
   // every device id change
-  useEffect(() => {
-    console.log("every Device Id change: start");
-    if (deviceId === null) return;
-    // if (!config.startOnMount) return;
-
-    console.log({ name: "Every DeviceId change", deviceId });
-    const promise = startStream();
-    return () => {
-      promise
-        .then((stream) => {
-          stopTracks(stream);
-        })
-        .catch(() => {
-          // empty
-        });
-    };
-  }, [deviceId]);
+  // useEffect(() => {
+  //   console.log("every Device Id change: start");
+  //   if (deviceId === null) return;
+  //   // if (!config.startOnMount) return;
+  //
+  //   console.log({ name: "Every DeviceId change", deviceId });
+  //   const promise = startStream();
+  //   return () => {
+  //     promise
+  //       .then((stream) => {
+  //         stopTracks(stream);
+  //       })
+  //       .catch(() => {
+  //         // empty
+  //       });
+  //   };
+  // }, [deviceId]);
 
   useEffect(() => {
     const stream = state.stream;
@@ -139,26 +168,34 @@ export const useMediaDevice = (
     if (stream) {
       setApi({
         stop: () => {
-          stopTracks(stream);
-          // todo refactor
-          setState((prevStateInner) => ({
-            ...prevStateInner,
-            isError: false,
-            isSuccess: true,
-            stream: undefined,
-            isEnabled: false,
-          }));
+          const result: Promise<void> = new Promise((resolve, reject) => {
+            stopTracks(stream);
+            // todo refactor
+            setState((prevStateInner) => {
+              resolve();
+              return {
+                ...prevStateInner,
+                isError: false,
+                isSuccess: true,
+                stream: undefined,
+                isEnabled: false,
+              };
+            });
+          });
+
+          return result;
         },
         start: () => {
           // empty
         },
         enable: () => setEnable(true),
         disable: () => setEnable(false),
+        startWithId: (id: string) => startStream2(id),
       });
     } else {
       setApi({
         stop: () => {
-          // empty
+          return Promise.reject();
         },
         start: () => {
           startStream();
@@ -169,9 +206,10 @@ export const useMediaDevice = (
         disable: () => {
           // empty
         },
+        startWithId: (id: string) => startStream2(id),
       });
     }
-  }, [startStream, setEnable, state]);
+  }, [startStream, setEnable, state, startStream2]);
 
   const result: UseMediaResult = useMemo(() => ({ ...api, ...state }), [api, state]);
 
@@ -196,8 +234,8 @@ export class DisplayMediaStreamConfig {
 
 export const useMedia = (
   config: MediaStreamConfig | DisplayMediaStreamConfig,
-  deviceId: string | null,
-  startOnMount = false
+  deviceId: string | null
+  // startOnMount = false
 ): UseMediaResult => {
   const mediaStreamSupplier = useCallback(() => {
     return config instanceof DisplayMediaStreamConfig
@@ -205,5 +243,5 @@ export const useMedia = (
       : navigator.mediaDevices.getUserMedia(config.constraints);
   }, [config, deviceId]);
 
-  return useMediaDevice({ startOnMount }, deviceId, mediaStreamSupplier);
+  return useMediaDevice(deviceId, mediaStreamSupplier);
 };

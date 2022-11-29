@@ -18,6 +18,52 @@ const showMediaDevicesPrompt = (constraints: MediaStreamConstraints, onSuccess: 
     });
 };
 
+const a = () => {
+  window.navigator.mediaDevices.enumerateDevices().then((mediaDevices) => {
+    console.log(mediaDevices);
+  });
+
+  window.navigator.mediaDevices.enumerateDevices().then((mediaDevicesInfo) => {
+    console.log({ name: "enumerateDevices before", mediaDevicesInfo });
+  });
+
+  window.navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((mediaStream) => {
+    console.log({ name: "media stream start", mediaStream });
+
+    window.navigator.mediaDevices.enumerateDevices().then((mediaDevicesInfo) => {
+      console.log({ name: "enumerateDevices in", mediaDevicesInfo });
+    });
+
+    setTimeout(() => {
+      console.log({ name: "stopping" });
+      mediaStream.getTracks().forEach((track) => {
+        track.stop();
+      });
+
+      setTimeout(() => {
+        console.log({ name: "enumerate after" });
+        window.navigator.mediaDevices.enumerateDevices().then((mediaDevicesInfo) => {
+          console.log({ name: "enumerateDevices", mediaDevicesInfo });
+        });
+      }, 2000);
+    }, 10000);
+  });
+
+  window.navigator.mediaDevices.enumerateDevices().then((mediaDevices) => {
+    console.log(mediaDevices);
+  });
+};
+
+// before authorization:
+// chrome:
+//  - deviceId - empty string
+//  - label - empty string
+// firefox:
+//  - deviceId - non empty string
+//  - label - empty string
+// firefox returns label only if persistent permissions are granted
+// from docs: https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/enumerateDevices
+
 export const useMediaDeviceManager = ({ askOnMount }: MediaDeviceManagerConfig = {}) => {
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [audioInputDevices, setAudioInputDevices] = useState<MediaDeviceInfo[]>([]);
@@ -45,14 +91,18 @@ export const useMediaDeviceManager = ({ askOnMount }: MediaDeviceManagerConfig =
   useEffect(() => {
     if (devices.length === 0) return;
 
-    const emptyId = devices.filter((device) => device.kind === "audioinput").find((device) => device.deviceId === "");
+    const emptyId = devices
+      .filter((device) => device.kind === "audioinput")
+      .find((device) => device.deviceId === "" || device.label === "");
     setAudioPermissionGranted(!emptyId);
   }, [devices]);
 
   useEffect(() => {
     if (devices.length === 0) return;
 
-    const emptyId = devices.filter((device) => device.kind === "videoinput").find((device) => device.deviceId === "");
+    const emptyId = devices
+      .filter((device) => device.kind === "videoinput")
+      .find((device) => device.deviceId === "" || device.label === "");
     setVideoPermissionGranted(!emptyId);
   }, [devices]);
 

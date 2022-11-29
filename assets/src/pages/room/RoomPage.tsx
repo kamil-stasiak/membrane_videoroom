@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { useMembraneClient } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
 import { PeerMetadata, RemotePeer, usePeersState } from "./hooks/usePeerState";
@@ -11,6 +11,7 @@ import { useAcquireWakeLockAutomatically } from "./hooks/useAcquireWakeLockAutom
 import { useMediaDeviceManager } from "./hooks/useMediaDeviceManager";
 import { DeviceSelector } from "./components/DeviceSelector";
 import { useSelectMediaDevice } from "./hooks/useSelectMediaDevice";
+import { useMediaDeviceManager2 } from "./hooks/useMediaDeviceManager2";
 
 type Props = {
   displayName: string;
@@ -24,10 +25,26 @@ export type SetErrorMessage = (value: string) => void;
 
 const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, autostartStreaming }: Props) => {
   const wakeLock = useAcquireWakeLockAutomatically();
-  const deviceManager = useMediaDeviceManager();
+  const deviceManager = useMediaDeviceManager2();
 
-  const videoInputs = useSelectMediaDevice(deviceManager?.videoInputDevices || []);
-  const audioInputs = useSelectMediaDevice(deviceManager?.audioInputDevices || []);
+  const [used, setUsed] = useState<boolean>(false);
+  useEffect(() => {
+    if (!deviceManager || used) return;
+    deviceManager.listDevices();
+    setUsed(true);
+  }, [deviceManager, used]);
+
+  useEffect(() => {
+    // console.log({ name: "Manager", deviceManager });
+  }, [deviceManager]);
+
+  const videoInputs = useSelectMediaDevice(deviceManager?.devicesMap?.videoinput || []);
+
+  // useEffect(() => {
+  //   console.log({ name: "videoInputs", videoInputs });
+  // }, [videoInputs]);
+
+  const audioInputs = useSelectMediaDevice(deviceManager?.devicesMap?.audioinput || []);
 
   const mode: StreamingMode = manualMode ? "manual" : "automatic";
 
@@ -38,6 +55,10 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
 
   const { state: peerState, api: peerApi } = usePeersState();
   const { webrtc } = useMembraneClient(roomId, peerMetadata, isSimulcastOn, peerApi, setErrorMessage);
+
+  // useEffect(() => {
+  //   console.log({ name: "localVideo", video: peerState?.local?.tracks?.camera });
+  // }, [peerState]);
 
   const isConnected = !!peerState?.local?.id;
 
@@ -74,8 +95,16 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
           </div>
         )}
 
-        <DeviceSelector options={videoInputs.devices} setDeviceId={videoInputs.setDeviceId} />
-        <DeviceSelector options={audioInputs.devices} setDeviceId={audioInputs.setDeviceId} />
+        <DeviceSelector
+          label="Select video input"
+          options={videoInputs.devices}
+          setDeviceId={videoInputs.setDeviceId}
+        />
+        <DeviceSelector
+          label="Select audio input"
+          options={audioInputs.devices}
+          setDeviceId={audioInputs.setDeviceId}
+        />
 
         <section className="flex flex-col h-screen mb-14">
           <header className="p-4">
