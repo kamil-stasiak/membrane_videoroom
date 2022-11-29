@@ -12,6 +12,7 @@ import { useMediaDeviceManager } from "./hooks/useMediaDeviceManager";
 import { DeviceSelector } from "./components/DeviceSelector";
 import { useSelectMediaDevice } from "./hooks/useSelectMediaDevice";
 import { useMediaDeviceManager2 } from "./hooks/useMediaDeviceManager2";
+import { VIDEO_TRACK_CONSTRAINTS } from "./consts";
 
 type Props = {
   displayName: string;
@@ -44,7 +45,7 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
   //   console.log({ name: "videoInputs", videoInputs });
   // }, [videoInputs]);
 
-  const audioInputs = useSelectMediaDevice(deviceManager?.devicesMap?.audioinput || []);
+  // const audioInputs = useSelectMediaDevice(deviceManager?.devicesMap?.audioinput || []);
 
   const mode: StreamingMode = manualMode ? "manual" : "automatic";
 
@@ -56,9 +57,9 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
   const { state: peerState, api: peerApi } = usePeersState();
   const { webrtc } = useMembraneClient(roomId, peerMetadata, isSimulcastOn, peerApi, setErrorMessage);
 
-  // useEffect(() => {
-  //   console.log({ name: "localVideo", video: peerState?.local?.tracks?.camera });
-  // }, [peerState]);
+  useEffect(() => {
+    // console.log({ name: "localVideo", video: peerState?.local?.tracks?.camera });
+  }, [peerState]);
 
   const isConnected = !!peerState?.local?.id;
 
@@ -70,19 +71,22 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     isSimulcastOn,
     webrtc,
     peerApi,
-    autostartStreaming
+    false,
+    "video",
+    VIDEO_TRACK_CONSTRAINTS,
+    "user"
   );
-  const audio = useStreamManager(
-    "audio",
-    audioInputs.deviceId,
-    mode,
-    isConnected,
-    isSimulcastOn,
-    webrtc,
-    peerApi,
-    autostartStreaming
-  );
-  const screenSharing = useStreamManager("screensharing", null, mode, isConnected, isSimulcastOn, webrtc, peerApi);
+  // const audio = useStreamManager(
+  //   "audio",
+  //   audioInputs.deviceId,
+  //   mode,
+  //   isConnected,
+  //   isSimulcastOn,
+  //   webrtc,
+  //   peerApi,
+  //   autostartStreaming
+  // );
+  // const screenSharing = useStreamManager("screensharing", null, mode, isConnected, isSimulcastOn, webrtc, peerApi);
 
   return (
     <section>
@@ -100,11 +104,11 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
           options={videoInputs.devices}
           setDeviceId={videoInputs.setDeviceId}
         />
-        <DeviceSelector
-          label="Select audio input"
-          options={audioInputs.devices}
-          setDeviceId={audioInputs.setDeviceId}
-        />
+        {/*<DeviceSelector*/}
+        {/*  label="Select audio input"*/}
+        {/*  options={audioInputs.devices}*/}
+        {/*  setDeviceId={audioInputs.setDeviceId}*/}
+        {/*/>*/}
 
         <section className="flex flex-col h-screen mb-14">
           <header className="p-4">
@@ -133,15 +137,15 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
             webrtc={webrtc}
           />
         </section>
-        <MediaControlButtons
-          mode={mode}
-          userMediaVideo={camera.local}
-          cameraStreaming={camera.remote}
-          userMediaAudio={audio.local}
-          audioStreaming={audio.remote}
-          displayMedia={screenSharing.local}
-          screenSharingStreaming={screenSharing.remote}
-        />
+        {/*<MediaControlButtons*/}
+        {/*  mode={mode}*/}
+        {/*  userMediaVideo={camera.local}*/}
+        {/*  cameraStreaming={camera.remote}*/}
+        {/*  userMediaAudio={audio.local}*/}
+        {/*  audioStreaming={audio.remote}*/}
+        {/*  displayMedia={screenSharing.local}*/}
+        {/*  screenSharingStreaming={screenSharing.remote}*/}
+        {/*/>*/}
       </div>
       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 md:right-2 md:-translate-x-1 md:left-auto flex flex-col items-stretch">
         {isSimulcastOn && (

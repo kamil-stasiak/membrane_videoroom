@@ -3,22 +3,16 @@ import { useSetLocalUserTrack } from "./useSetLocalUserTrack";
 import { useSetRemoteTrackId } from "./useSetRemoteTrackId";
 import { useSetLocalTrackMetadata } from "./useSetLocalTrackMetadata";
 import { MembraneWebRTC } from "@membraneframework/membrane-webrtc-js";
-import { DisplayMediaStreamConfig, MediaStreamConfig, useMedia, UseMediaResult } from "./useMedia";
+import { useMediaDevice, UseMediaResult } from "./useMedia";
 import { PeersApi } from "./usePeerState";
 import { TrackType } from "../../types";
-import { useEffect, useMemo, useState } from "react";
-import { AUDIO_TRACK_CONSTRAINTS, SCREENSHARING_MEDIA_CONSTRAINTS, VIDEO_TRACK_CONSTRAINTS } from "../consts";
+import { useEffect, useState } from "react";
+import { VIDEO_TRACK_CONSTRAINTS } from "../consts";
 
 export type Streams = {
   remote: MembraneStreaming;
   local: UseMediaResult;
 };
-
-export class DisplayConstraints {
-  constructor(public constraints: DisplayMediaStreamConstraints) {
-    this.constraints = constraints;
-  }
-}
 
 export const useStreamManager = (
   type: TrackType,
@@ -28,54 +22,23 @@ export const useStreamManager = (
   simulcast: boolean,
   webrtc: MembraneWebRTC | undefined,
   peersApi: PeersApi,
-  autostartStreaming?: boolean
+  autostartStreaming: boolean,
+  mediaManagerType: "video" | "audio",
+  trackConstraints: MediaTrackConstraints,
+  navigatorMediaType: "user" | "display"
 ): Streams => {
-  // todo refactor me
-  const config: MediaStreamConfig | DisplayMediaStreamConfig = useMemo(() => {
-    if (type === "screensharing")
-      return new DisplayMediaStreamConfig({
-        video: {
-          ...SCREENSHARING_MEDIA_CONSTRAINTS,
-          deviceId: deviceId ?? undefined,
-        },
-      });
-    if (type === "camera")
-      return new MediaStreamConfig({
-        video: {
-          ...VIDEO_TRACK_CONSTRAINTS,
-          deviceId: deviceId ?? undefined,
-        },
-      });
-    if (type === "audio")
-      return new MediaStreamConfig({
-        audio: {
-          ...AUDIO_TRACK_CONSTRAINTS,
-          deviceId: deviceId ?? undefined,
-        },
-      });
-
-    throw "string";
-  }, [type, deviceId]);
-
-  const local = useMedia(config, deviceId);
+  const local = useMediaDevice(mediaManagerType, VIDEO_TRACK_CONSTRAINTS, navigatorMediaType);
 
   const [lastDeviceId, setLastDeviceId] = useState<string | null>(null);
   useEffect(() => {
+    console.log({ deviceId, lastDeviceId });
+
     if (lastDeviceId === null && deviceId !== null) {
-      // console.log("Device id change from null to something interesting");
-      local.start();
-      // first run
+      local.start(deviceId);
     } else if (lastDeviceId !== deviceId && deviceId !== null) {
-      // console.log("Device id change from one to another!");
-      local.stop().then(() => {
-        // console.log("Stopped...");
-        local.startWithId(deviceId).then(() => {
-          // console.log("New started...");
-        });
-      });
+      local.replace(deviceId);
     }
     setLastDeviceId(deviceId);
-    // console.log({ name: "DeviceId", deviceId, lastDeviceId });
   }, [deviceId, lastDeviceId, local]);
 
   const remote = useMembraneMediaStreaming(mode, type, isConnected, simulcast, webrtc, local.stream);

@@ -11,16 +11,12 @@ type State = {
 };
 
 export type Api = {
-  start: () => void;
   stop: () => Promise<void>;
   enable: () => void;
   disable: () => void;
-  startWithId: (id: string) => Promise<MediaStream>;
+  start: (deviceId: string) => Promise<MediaStream>;
+  replace: (deviceId: string) => Promise<MediaStream>;
 };
-//
-// type Config = {
-//   startOnMount: boolean;
-// };
 
 const stopTracks = (stream: MediaStream) => {
   stream.getTracks().forEach((track) => {
@@ -29,9 +25,9 @@ const stopTracks = (stream: MediaStream) => {
 };
 
 export const useMediaDevice = (
-  // config: Config,
-  deviceId: string | null,
-  mediaStreamSupplier: () => Promise<MediaStream>
+  type: "audio" | "video",
+  mediaTrackConstraints: MediaTrackConstraints,
+  navigatorMediaType: "user" | "display"
 ): UseMediaResult => {
   const [state, setState] = useState<State>({
     isError: false,
@@ -41,11 +37,14 @@ export const useMediaDevice = (
   });
 
   const [api, setApi] = useState<Api>({
-    start: () => {},
     stop: () => Promise.resolve(),
     enable: () => {},
     disable: () => {},
-    startWithId: (id: string) => Promise.reject(),
+    start: (id: string) => {
+      console.log("Hello");
+      return Promise.reject();
+    },
+    replace: (id: string) => Promise.reject(),
   });
 
   // rename to clearState or sth
@@ -85,32 +84,20 @@ export const useMediaDevice = (
     [setErrorState]
   );
 
-  const startStream = useCallback((): Promise<MediaStream> => {
-    return mediaStreamSupplier()
-      .then((stream: MediaStream) => {
-        // console.log({ name: "Stream", stream });
-        setupTrackCallbacks(stream);
-        setSuccessfulState(stream);
-        return stream;
-      })
-      .catch((error) => {
-        // this callback fires up when
-        // - user didn't grant permission to camera
-        // - user clicked "Cancel" instead of "Share" on Screen Sharing menu ("Chose what to share" in Google Chrome)
-        setErrorState();
-        return Promise.reject();
-      });
-  }, [mediaStreamSupplier, setupTrackCallbacks, setSuccessfulState, setErrorState]); // todo add media stream supplier
+  const getMediaStream = useCallback(
+    (deviceId: string): Promise<MediaStream> => {
+      const constraints: MediaStreamConstraints = { [type]: { ...mediaTrackConstraints, deviceId: deviceId } };
 
-  const startStream2 = useCallback(
+      return navigatorMediaType === "user"
+        ? navigator.mediaDevices.getUserMedia(constraints)
+        : navigator.mediaDevices.getDisplayMedia(constraints);
+    },
+    [mediaTrackConstraints, navigatorMediaType, type]
+  );
+
+  const startStream = useCallback(
     (id: string): Promise<MediaStream> => {
-      return navigator.mediaDevices
-        .getUserMedia({
-          video: {
-            ...VIDEO_TRACK_CONSTRAINTS,
-            deviceId: id,
-          },
-        })
+      return getMediaStream(id)
         .then((stream: MediaStream) => {
           console.log({ name: "Stream", stream });
           setupTrackCallbacks(stream);
@@ -125,8 +112,8 @@ export const useMediaDevice = (
           return Promise.reject();
         });
     },
-    [mediaStreamSupplier, setupTrackCallbacks, setSuccessfulState, setErrorState]
-  ); // todo add media stream supplier
+    [getMediaStream, setupTrackCallbacks, setSuccessfulState, setErrorState]
+  );
 
   const setEnable = useCallback(
     (status: boolean) => {
@@ -143,73 +130,56 @@ export const useMediaDevice = (
     [state.stream, setState] // todo
   );
 
-  // every device id change
-  // useEffect(() => {
-  //   console.log("every Device Id change: start");
-  //   if (deviceId === null) return;
-  //   // if (!config.startOnMount) return;
-  //
-  //   console.log({ name: "Every DeviceId change", deviceId });
-  //   const promise = startStream();
-  //   return () => {
-  //     promise
-  //       .then((stream) => {
-  //         stopTracks(stream);
-  //       })
-  //       .catch(() => {
-  //         // empty
-  //       });
-  //   };
-  // }, [deviceId]);
-
   useEffect(() => {
     const stream = state.stream;
 
     if (stream) {
-      setApi({
-        stop: () => {
-          const result: Promise<void> = new Promise((resolve, reject) => {
+      const stopInner = () => {
+        const result: Promise<void> = new Promise((resolve, reject) => {
+          if (stream) {
             stopTracks(stream);
-            // todo refactor
-            setState((prevStateInner) => {
-              resolve();
-              return {
-                ...prevStateInner,
-                isError: false,
-                isSuccess: true,
-                stream: undefined,
-                isEnabled: false,
-              };
-            });
+          }
+          // todo refactor
+          setState((prevStateInner) => {
+            resolve();
+            return {
+              ...prevStateInner,
+              isError: false,
+              isSuccess: true,
+              stream: undefined,
+              isEnabled: false,
+            };
           });
+        });
 
-          return result;
-        },
-        start: () => {
-          // empty
-        },
+        return result;
+      };
+
+      setApi({
+        stop: stopInner,
         enable: () => setEnable(true),
         disable: () => setEnable(false),
-        startWithId: (id: string) => startStream2(id),
+        start: (id: string) => startStream(id),
+        replace: (id: string) => {
+          return stopInner().then(() => {
+            return startStream(id);
+          });
+        },
       });
     } else {
       setApi({
-        stop: () => {
-          return Promise.reject();
-        },
-        start: () => {
-          startStream();
-        },
+        stop: () => Promise.reject(),
         enable: () => {
           // empty
         },
         disable: () => {
           // empty
         },
-        startWithId: (id: string) => startStream2(id),
+        start: (id: string) => startStream(id),
+        replace: (id: string) => Promise.reject(),
       });
     }
-  }, [startStream, setEnable, state, startStream2]);
+  }, [startStream, setEnable, state]);
 
   const result: UseMediaResult = useMemo(() => ({ ...api, ...state }), [api, state]);
 
@@ -231,17 +201,3 @@ export class DisplayMediaStreamConfig {
     this.constraints = constraints;
   }
 }
-
-export const useMedia = (
-  config: MediaStreamConfig | DisplayMediaStreamConfig,
-  deviceId: string | null
-  // startOnMount = false
-): UseMediaResult => {
-  const mediaStreamSupplier = useCallback(() => {
-    return config instanceof DisplayMediaStreamConfig
-      ? navigator.mediaDevices.getDisplayMedia(config.constraints)
-      : navigator.mediaDevices.getUserMedia(config.constraints);
-  }, [config, deviceId]);
-
-  return useMediaDevice(deviceId, mediaStreamSupplier);
-};
