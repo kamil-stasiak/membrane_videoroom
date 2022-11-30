@@ -1,21 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { VIDEO_TRACK_CONSTRAINTS } from "../consts";
 
-export type UseMediaResult = State & Api;
+export type MediaDevice = State & Api;
 
 type State = {
-  isError: boolean; // todo remove
-  isSuccess: boolean; // todo remove
-  stream?: MediaStream; // important
-  isEnabled: boolean; // important
+  isError: boolean;
+  isSuccess: boolean;
+  stream?: MediaStream;
+  isEnabled: boolean;
 };
 
-export type Api = {
+type Api = {
   stop: () => Promise<void>;
   enable: () => void;
   disable: () => void;
-  start: (deviceId: string) => Promise<MediaStream>;
-  replace: (deviceId: string) => Promise<MediaStream>;
+  start: (deviceId?: string | null) => Promise<void>;
+  replace: (deviceId?: string | null) => Promise<void>;
 };
 
 const stopTracks = (stream: MediaStream) => {
@@ -24,11 +23,11 @@ const stopTracks = (stream: MediaStream) => {
   });
 };
 
-export const useMediaDevice = (
+export const useMedia = (
   type: "audio" | "video",
   mediaTrackConstraints: MediaTrackConstraints,
   navigatorMediaType: "user" | "display"
-): UseMediaResult => {
+): MediaDevice => {
   const [state, setState] = useState<State>({
     isError: false,
     isSuccess: true,
@@ -38,16 +37,16 @@ export const useMediaDevice = (
 
   const [api, setApi] = useState<Api>({
     stop: () => Promise.resolve(),
-    enable: () => {},
-    disable: () => {},
-    start: (id: string) => {
-      console.log("Hello");
-      return Promise.reject();
+    enable: () => {
+      return;
     },
-    replace: (id: string) => Promise.reject(),
+    disable: () => {
+      return;
+    },
+    start: (deviceId?: string | null) => Promise.reject(),
+    replace: (deviceId?: string | null) => Promise.reject(),
   });
 
-  // rename to clearState or sth
   const setErrorState = useCallback(() => {
     setState(
       (): State => ({
@@ -85,8 +84,13 @@ export const useMediaDevice = (
   );
 
   const getMediaStream = useCallback(
-    (deviceId: string): Promise<MediaStream> => {
-      const constraints: MediaStreamConstraints = { [type]: { ...mediaTrackConstraints, deviceId: deviceId } };
+    (deviceId?: string | null): Promise<MediaStream> => {
+      const constraints: MediaStreamConstraints = {
+        [type]: {
+          ...mediaTrackConstraints,
+          deviceId: deviceId || undefined,
+        },
+      };
 
       return navigatorMediaType === "user"
         ? navigator.mediaDevices.getUserMedia(constraints)
@@ -96,10 +100,10 @@ export const useMediaDevice = (
   );
 
   const startStream = useCallback(
-    (id: string): Promise<MediaStream> => {
-      return getMediaStream(id)
+    (deviceId?: string | null): Promise<MediaStream> => {
+      return getMediaStream(deviceId)
         .then((stream: MediaStream) => {
-          console.log({ name: "Stream", stream });
+          // console.log({ name: "Stream", stream });
           setupTrackCallbacks(stream);
           setSuccessfulState(stream);
           return stream;
@@ -127,77 +131,49 @@ export const useMediaDevice = (
         })
       );
     },
-    [state.stream, setState] // todo
+    [state, setState] // todo
+  );
+
+  const stopStream = useCallback(
+    (): Promise<void> =>
+      new Promise((resolve, reject) => {
+        if (!state.stream) {
+          reject();
+          return;
+        }
+
+        stopTracks(state.stream);
+        setState((prevStateInner) => {
+          resolve();
+          return {
+            ...prevStateInner,
+            isError: false,
+            isSuccess: true,
+            stream: undefined,
+            isEnabled: false,
+          };
+        });
+      }),
+    [state]
   );
 
   useEffect(() => {
-    const stream = state.stream;
+    setApi({
+      stop: stopStream,
+      enable: () => setEnable(true),
+      disable: () => setEnable(false),
+      start: (deviceId?: string | null) =>
+        startStream(deviceId).then(() => {
+          return;
+        }),
+      replace: (deviceId?: string | null) =>
+        stopStream()
+          .then(() => startStream(deviceId))
+          .then(() => {
+            return;
+          }),
+    });
+  }, [startStream, setEnable, state, stopStream]);
 
-    if (stream) {
-      const stopInner = () => {
-        const result: Promise<void> = new Promise((resolve, reject) => {
-          if (stream) {
-            stopTracks(stream);
-          }
-          // todo refactor
-          setState((prevStateInner) => {
-            resolve();
-            return {
-              ...prevStateInner,
-              isError: false,
-              isSuccess: true,
-              stream: undefined,
-              isEnabled: false,
-            };
-          });
-        });
-
-        return result;
-      };
-
-      setApi({
-        stop: stopInner,
-        enable: () => setEnable(true),
-        disable: () => setEnable(false),
-        start: (id: string) => startStream(id),
-        replace: (id: string) => {
-          return stopInner().then(() => {
-            return startStream(id);
-          });
-        },
-      });
-    } else {
-      setApi({
-        stop: () => Promise.reject(),
-        enable: () => {
-          // empty
-        },
-        disable: () => {
-          // empty
-        },
-        start: (id: string) => startStream(id),
-        replace: (id: string) => Promise.reject(),
-      });
-    }
-  }, [startStream, setEnable, state]);
-
-  const result: UseMediaResult = useMemo(() => ({ ...api, ...state }), [api, state]);
-
-  return result;
+  return useMemo(() => ({ ...api, ...state }), [api, state]);
 };
-
-export class MediaStreamConfig {
-  private readonly type = "MediaStreamConfig";
-
-  constructor(public constraints: MediaStreamConstraints) {
-    this.constraints = constraints;
-  }
-}
-
-export class DisplayMediaStreamConfig {
-  private readonly type = "DisplayMediaStreamConfig";
-
-  constructor(public constraints: DisplayMediaStreamConstraints) {
-    this.constraints = constraints;
-  }
-}

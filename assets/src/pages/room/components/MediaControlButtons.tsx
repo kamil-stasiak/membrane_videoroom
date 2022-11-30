@@ -1,17 +1,21 @@
 import React, { FC } from "react";
 
-import { UseMediaResult } from "../hooks/useMedia";
+import { MediaDevice } from "../hooks/useMedia";
 import MediaControlButton, { MediaControlButtonProps } from "./MediaControlButton";
 import { NavigateFunction, useNavigate } from "react-router-dom";
 import { MembraneStreaming, StreamingMode } from "../hooks/useMembraneMediaStreaming";
 
-const getControlsAutomatic = (
-  userMediaAudio: UseMediaResult,
-  audioStreaming: MembraneStreaming,
-  userMediaVideo: UseMediaResult,
-  cameraStreaming: MembraneStreaming,
-  displayMedia: UseMediaResult,
-  screenSharingStreaming: MembraneStreaming,
+const getAutomaticControls = (
+  {
+    audioDeviceId,
+    userMediaAudio,
+    audioStreaming,
+    videoDeviceId,
+    userMediaVideo,
+    cameraStreaming,
+    displayMedia,
+    screenSharingStreaming,
+  }: LocalUserMediaDevices,
   navigate: NavigateFunction
 ): MediaControlButtonProps[] => [
   userMediaAudio.isEnabled
@@ -27,7 +31,7 @@ const getControlsAutomatic = (
         icon: "/svg/mic-off-fill.svg",
         hover: "Unmute the microphone",
         onClick: () => {
-          userMediaAudio.start();
+          userMediaAudio.start(audioDeviceId);
           audioStreaming.setActive(true);
         },
       },
@@ -44,7 +48,7 @@ const getControlsAutomatic = (
         hover: "Turn on the camera",
         icon: "/svg/camera-off-line.svg",
         onClick: () => {
-          userMediaVideo.start();
+          userMediaVideo.start(videoDeviceId);
           cameraStreaming.setActive(true);
         },
       },
@@ -76,12 +80,16 @@ const getControlsAutomatic = (
 ];
 
 const getManualControls = (
-  userMediaAudio: UseMediaResult,
-  audioStreaming: MembraneStreaming,
-  userMediaVideo: UseMediaResult,
-  cameraStreaming: MembraneStreaming,
-  displayMedia: UseMediaResult,
-  screenSharingStreaming: MembraneStreaming,
+  {
+    audioDeviceId,
+    userMediaAudio,
+    audioStreaming,
+    videoDeviceId,
+    userMediaVideo,
+    cameraStreaming,
+    displayMedia,
+    screenSharingStreaming,
+  }: LocalUserMediaDevices,
   navigate: NavigateFunction
 ) => [
   userMediaAudio.stream
@@ -93,7 +101,7 @@ const getManualControls = (
     : {
         icon: "/svg/mic-off-fill.svg",
         hover: "Stop the microphone",
-        onClick: () => userMediaAudio.start(),
+        onClick: () => userMediaAudio.start(audioDeviceId),
       },
   userMediaAudio.isEnabled
     ? {
@@ -137,7 +145,7 @@ const getManualControls = (
     : {
         hover: "Turn on the camera",
         icon: "/svg/camera-off-line.svg",
-        onClick: () => userMediaVideo.start(),
+        onClick: () => userMediaVideo.start(videoDeviceId),
       },
   userMediaVideo.isEnabled
     ? {
@@ -228,44 +236,23 @@ const getManualControls = (
 
 type Props = {
   mode: StreamingMode;
-  userMediaVideo: UseMediaResult;
+} & LocalUserMediaDevices;
+
+type LocalUserMediaDevices = {
+  videoDeviceId: string | null;
+  userMediaVideo: MediaDevice;
   cameraStreaming: MembraneStreaming;
-  userMediaAudio: UseMediaResult;
+  audioDeviceId: string | null;
+  userMediaAudio: MediaDevice;
   audioStreaming: MembraneStreaming;
-  displayMedia: UseMediaResult;
+  displayMedia: MediaDevice;
   screenSharingStreaming: MembraneStreaming;
 };
 
-const MediaControlButtons: FC<Props> = ({
-  mode,
-  userMediaAudio,
-  audioStreaming,
-  userMediaVideo,
-  cameraStreaming,
-  displayMedia,
-  screenSharingStreaming,
-}: Props) => {
+const MediaControlButtons: FC<Props> = (props: Props) => {
   const navigate = useNavigate();
   const controls: MediaControlButtonProps[] =
-    mode === "manual"
-      ? getManualControls(
-          userMediaAudio,
-          audioStreaming,
-          userMediaVideo,
-          cameraStreaming,
-          displayMedia,
-          screenSharingStreaming,
-          navigate
-        )
-      : getControlsAutomatic(
-          userMediaAudio,
-          audioStreaming,
-          userMediaVideo,
-          cameraStreaming,
-          displayMedia,
-          screenSharingStreaming,
-          navigate
-        );
+    props.mode === "manual" ? getManualControls(props, navigate) : getAutomaticControls(props, navigate);
 
   return (
     <div

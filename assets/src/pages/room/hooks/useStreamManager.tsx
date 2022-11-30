@@ -3,7 +3,7 @@ import { useSetLocalUserTrack } from "./useSetLocalUserTrack";
 import { useSetRemoteTrackId } from "./useSetRemoteTrackId";
 import { useSetLocalTrackMetadata } from "./useSetLocalTrackMetadata";
 import { MembraneWebRTC } from "@membraneframework/membrane-webrtc-js";
-import { useMediaDevice, UseMediaResult } from "./useMedia";
+import { useMedia, MediaDevice } from "./useMedia";
 import { PeersApi } from "./usePeerState";
 import { TrackType } from "../../types";
 import { useEffect, useState } from "react";
@@ -11,8 +11,22 @@ import { VIDEO_TRACK_CONSTRAINTS } from "../consts";
 
 export type Streams = {
   remote: MembraneStreaming;
-  local: UseMediaResult;
+  local: MediaDevice;
 };
+
+function useMediaStreamSourceManager(deviceId: string | null, startOnMount: boolean, mediaDevice: MediaDevice) {
+  const { start, replace, stream } = mediaDevice;
+  const [lastDeviceId, setLastDeviceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (lastDeviceId === null && deviceId !== null && startOnMount) {
+      start(deviceId);
+    } else if (lastDeviceId !== deviceId && deviceId !== null && stream) {
+      replace(deviceId);
+    }
+    setLastDeviceId(deviceId);
+  }, [startOnMount, deviceId, lastDeviceId, mediaDevice, stream, start, replace]);
+}
 
 export const useStreamManager = (
   type: TrackType,
@@ -27,19 +41,9 @@ export const useStreamManager = (
   trackConstraints: MediaTrackConstraints,
   navigatorMediaType: "user" | "display"
 ): Streams => {
-  const local = useMediaDevice(mediaManagerType, VIDEO_TRACK_CONSTRAINTS, navigatorMediaType);
+  const local = useMedia(mediaManagerType, VIDEO_TRACK_CONSTRAINTS, navigatorMediaType);
 
-  const [lastDeviceId, setLastDeviceId] = useState<string | null>(null);
-  useEffect(() => {
-    console.log({ deviceId, lastDeviceId });
-
-    if (lastDeviceId === null && deviceId !== null) {
-      local.start(deviceId);
-    } else if (lastDeviceId !== deviceId && deviceId !== null) {
-      local.replace(deviceId);
-    }
-    setLastDeviceId(deviceId);
-  }, [deviceId, lastDeviceId, local]);
+  useMediaStreamSourceManager(deviceId, autostartStreaming, local);
 
   const remote = useMembraneMediaStreaming(mode, type, isConnected, simulcast, webrtc, local.stream);
   useSetLocalUserTrack(type, peersApi, local.stream, local.isEnabled);

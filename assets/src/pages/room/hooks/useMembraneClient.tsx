@@ -70,6 +70,7 @@ export const useMembraneClient = (
           if (!ctx?.peer || !ctx?.track || !ctx?.stream) return;
           const metadata: TrackMetadata = parseMetadata(ctx);
           api.addTrack(ctx.peer.id, ctx.trackId, ctx.track, ctx.stream, metadata);
+          console.log({name: "onTrackReady", ctx})
         },
         onTrackAdded: (ctx) => {
           // todo this event is triggered multiple times even though onTrackRemoved was invoked
