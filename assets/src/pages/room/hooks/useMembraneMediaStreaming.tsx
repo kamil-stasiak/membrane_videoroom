@@ -7,9 +7,8 @@ export type MembraneStreaming = {
   removeTracks: () => void;
   addTracks: (stream: MediaStream) => void;
   setActive: (status: boolean) => void;
-  updateTrackMetadata: (metadata: any) => void;
-  // todo make track metadata generic
-  trackMetadata: any;
+  updateTrackMetadata: (metadata: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+  trackMetadata: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
 export type StreamingMode = "manual" | "automatic";
@@ -24,17 +23,15 @@ export const useMembraneMediaStreaming = (
 ): MembraneStreaming => {
   const [tracksId, setTracksId] = useState<string[]>([]);
   const [webrtcState, setWebrtcState] = useState<MembraneWebRTC | undefined>(webrtc);
-  const [trackMetadata, setTrackMetadata] = useState<any>();
+  const [trackMetadata, setTrackMetadata] = useState<any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
   const defaultTrackMetadata = useMemo(() => ({ active: true, type }), [type]);
 
   const addTracks = useCallback(
     (stream: MediaStream) => {
-      // console.log({ name: "addTracks" });
-
       if (!webrtc) return;
       const tracks = type === "audio" ? stream.getAudioTracks() : stream.getVideoTracks();
 
-      const tracksId: string[] = tracks.map((track, idx) =>
+      const tracksId: string[] = tracks.map((track) =>
         webrtc.addTrack(
           track,
           stream,
@@ -44,15 +41,12 @@ export const useMembraneMediaStreaming = (
       );
 
       setTracksId((prevState) => [...prevState, ...tracksId]);
-      // console.log({ name: "addTracks - tracks added", tracks });
-
       setTrackMetadata(defaultTrackMetadata);
     },
     [defaultTrackMetadata, simulcast, type, webrtc]
   );
 
   const removeTracks = useCallback(() => {
-    // console.log({ name: "removeTracks", tracksId });
     setTracksId([]);
     tracksId.forEach((trackId) => {
       webrtc?.removeTrack(trackId);
@@ -77,7 +71,7 @@ export const useMembraneMediaStreaming = (
   }, [webrtc, type]);
 
   const updateTrackMetadata = useCallback(
-    (metadata: any) => {
+    (metadata: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       tracksId.forEach((trackId) => {
         webrtcState?.updateTrackMetadata(trackId, metadata);
       });

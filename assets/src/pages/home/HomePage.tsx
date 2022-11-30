@@ -1,12 +1,11 @@
-import React, { FC, useContext, useEffect, useState } from "react";
+import React, { FC, useContext, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { UserContext } from "../../contexts/userContext";
 import clsx from "clsx";
 import { DeveloperContext } from "../../contexts/developerContext";
 import { Checkbox, Props as CheckboxProps } from "./Checkbox";
 import { useToggle } from "../room/hooks/useToggle";
-import { useMediaDeviceManager2 } from "../room/hooks/useMediaDeviceManager2";
-import { useBooleanDebounce } from "../room/hooks/useBooleanDebounce";
+import { useMediaDeviceManager } from "../room/hooks/useMediaDeviceManager";
 
 export type Device = {
   id: string;
@@ -14,18 +13,7 @@ export type Device = {
 };
 
 export const HomePage: FC = () => {
-  // const deviceManager = useMediaDeviceManager({ askOnMount: true });
-  //
-  // const deviceManager = useMediaDeviceManager2();
-  // useEffect(() => {
-  //   console.log({ name: "devices", d: deviceManager });
-  // }, [deviceManager]);
-  //
-  // const booleanDebounce = useBooleanDebounce(deviceManager.isPermissionManagerWindowDisplayed, 300, 0);
-
-  // useEffect(() => {
-  //   console.log({ name: "useDebounce", booleanDebounce });
-  // }, [booleanDebounce]);
+  const deviceManager = useMediaDeviceManager({ askOnMount: true });
 
   const match = useParams();
   const [searchParams] = useSearchParams();
@@ -38,7 +26,7 @@ export const HomePage: FC = () => {
   const lastDisplayName: string | null = localStorage.getItem("displayName");
   const [displayNameInput, setDisplayNameInput] = useState<string>(lastDisplayName || "");
 
-  const [autostartCameraAndMicInput, setAutostartCameraAndMicCheckbox] = useToggle(false);
+  const [autostartCameraAndMicInput, setAutostartCameraAndMicCheckbox] = useToggle(true);
 
   const simulcastParam: string = searchParams?.get("simulcast") || "";
   const simulcastDefaultValue: boolean = simulcastParam === "true";
@@ -52,37 +40,28 @@ export const HomePage: FC = () => {
     {
       text: "Autostart camera and mic",
       id: "autostart-camera-and-mic",
-      onClick: setAutostartCameraAndMicCheckbox,
+      onChange: setAutostartCameraAndMicCheckbox,
       status: autostartCameraAndMicInput,
     },
     {
       text: "Simulcast",
       id: "simulcast",
-      onClick: toggleSimulcastCheckbox,
+      onChange: toggleSimulcastCheckbox,
       status: simulcastInput,
     },
     {
       text: "Manual mode",
       id: "manual-mode",
-      onClick: toggleManualModeCheckbox,
+      onChange: toggleManualModeCheckbox,
       status: manualModeInput,
     },
   ];
 
   return (
     <section>
-      {/*<div*/}
-      {/*  className={clsx({*/}
-      {/*    "text-white p-1 w-full": true,*/}
-      {/*    "bg-green-700": !deviceManager.isPermissionManagerWindowDisplayed,*/}
-      {/*    "bg-yellow-700": deviceManager.isPermissionManagerWindowDisplayed,*/}
-      {/*  })}*/}
-      {/*>*/}
-      {/*  <button onClick={() => deviceManager.listDevices()}>Enumerate devices</button>*/}
-      {/*</div>*/}
-
-      {/*{deviceManager.error && <div className="bg-red-700 text-white p-1 w-full">{deviceManager.error}</div>}*/}
-      {/*{booleanDebounce && <div className="bg-purple-700 text-white p-1 w-full">Text overlay</div>}*/}
+      {deviceManager.errorMessage && (
+        <div className="bg-red-700 text-white p-1 w-full">{deviceManager.errorMessage}</div>
+      )}
       <div className="p-8 flex flex-col items-center">
         <div className="mb-4">
           <img src="/svg/logo.svg" className="mb-2" alt="logo" />
@@ -116,8 +95,8 @@ export const HomePage: FC = () => {
               placeholder="Display name"
             />
           </div>
-          {checkboxes.map(({ text, id, status, onClick }, index) => (
-            <Checkbox key={index} text={text} id={id} status={status} onClick={onClick} />
+          {checkboxes.map(({ text, id, status, onChange }, index) => (
+            <Checkbox key={index} text={text} id={id} status={status} onChange={onChange} />
           ))}
           <div className="flex items-center justify-between">
             <Link
