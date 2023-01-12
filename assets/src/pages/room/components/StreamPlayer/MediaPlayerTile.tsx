@@ -6,7 +6,7 @@ import { SimulcastRemoteLayer } from "./simulcast/SimulcastRemoteLayer";
 import { UseSimulcastLocalEncoding, useSimulcastSend } from "../../hooks/useSimulcastSend";
 import { StreamSource } from "../../../../library/types";
 import { TrackWithId } from "./MediaPlayerPeersSection";
-import { NewWebRtcType } from "../../../../library/library";
+import { PublicApi } from "../../../../library/library";
 
 export interface Props {
   peerId?: string;
@@ -17,7 +17,7 @@ export interface Props {
   showSimulcast?: boolean;
   streamSource?: StreamSource;
   layers?: JSX.Element;
-  webrtc?: NewWebRtcType;
+  webrtc?: PublicApi;
 }
 
 const MediaPlayerTile: FC<Props> = ({

@@ -1,12 +1,12 @@
 import React, { FC } from "react";
 import { ApiTrack, RemotePeer } from "../../../../library/usePeerState";
 import MediaPlayerTile from "./MediaPlayerTile";
-import { MembraneWebRTC, TrackEncoding } from "@membraneframework/membrane-webrtc-js";
+import { TrackEncoding } from "@membraneframework/membrane-webrtc-js";
 import clsx from "clsx";
 import { StreamSource, TrackType } from "../../../../library/types";
 import InfoLayer from "./PeerInfoLayer";
 import PeerInfoLayer from "./PeerInfoLayer";
-import { NewWebRtcType } from "../../../../library/library";
+import { PublicApi } from "../../../../library/library";
 
 export type TrackWithId = {
   stream?: MediaStream;
@@ -74,7 +74,7 @@ type Props = {
   showDeveloperInfo?: boolean;
   selectRemoteTrackEncoding?: (peerId: string, trackId: string, encoding: TrackEncoding) => void;
   oneColumn?: boolean;
-  webrtc?: NewWebRtcType;
+  webrtc?: PublicApi;
 };
 
 const isLoading = (track: TrackWithId) => track?.stream === undefined && track?.metadata?.active === true;
@@ -101,7 +101,7 @@ const MediaPlayerPeersSection: FC<Props> = ({
         "md:grid-cols-2": !oneColumn,
       })}
     >
-      {allPeersConfig.map((config, idx) => {
+      {allPeersConfig.map((config) => {
         // todo for now only first audio, video and screen sharing stream are handled
         const video: TrackWithId | undefined = config.video[0];
         const screenSharing: TrackWithId | undefined = config.screenSharing[0];

@@ -7,7 +7,6 @@ import { VideochatSection } from "./VideochatSection";
 import { useStreamManager } from "./hooks/useStreamManager";
 import { StreamingMode } from "./hooks/useMembraneMediaStreaming";
 import { useAcquireWakeLockAutomatically } from "./hooks/useAcquireWakeLockAutomatically";
-import { useLibrary } from "../../library/library";
 import { useVideoroomWrapper } from "../../library-usage/videoroom-wrapper";
 
 type Props = {
@@ -35,9 +34,9 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     mode,
     isConnected,
     isSimulcastOn,
-    library.newWebRtc,
+    library.publicApi,
     VIDEO_TRACKS_CONFIG,
-    library.peerApi,
+    library.privateApi,
     autostartStreaming
   );
   const audio = useStreamManager(
@@ -45,9 +44,9 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     mode,
     isConnected,
     isSimulcastOn,
-    library.newWebRtc,
+    library.publicApi,
     AUDIO_TRACKS_CONFIG,
-    library.peerApi,
+    library.privateApi,
     autostartStreaming
   );
   const screenSharing = useStreamManager(
@@ -55,9 +54,9 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     mode,
     isConnected,
     isSimulcastOn,
-    library.newWebRtc,
+    library.publicApi,
     SCREEN_SHARING_TRACKS_CONFIG,
-    library.peerApi,
+    library.privateApi,
     false
   );
 
@@ -82,7 +81,7 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
             <h3 className="text-xl font-medium text-white">
               Participants{" "}
               <span>
-                {library.peerMetadata.emoji} {library.peerMetadata.displayName}
+                {library.peerState.local?.metadata?.emoji} {library.peerState.local?.metadata?.displayName}
               </span>
               {library.peerState.remote.map((peer: RemotePeer) => (
                 <span key={peer.id} title={peer.id}>
@@ -96,7 +95,7 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
             localPeer={library.peerState.local}
             showSimulcast={showSimulcastMenu}
             showDeveloperInfo={showDeveloperInfo}
-            webrtc={library.newWebRtc}
+            webrtc={library.publicApi}
           />
         </section>
       </div>

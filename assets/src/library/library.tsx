@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { MembraneWebRTC } from "@membraneframework/membrane-webrtc-js";
-import { PeerMetadata, PeersApi, PeersState, usePeersState } from "./usePeerState";
+import { PeerMetadata, PrivateApi, PeersState, usePeersState } from "./usePeerState";
 import { useMembraneClient } from "./useMembraneClient";
 import {
   SimulcastConfig,
@@ -8,7 +8,7 @@ import {
   TrackEncoding,
 } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
 
-export type NewWebRtcType = Pick<
+export type PublicApi = Pick<
   MembraneWebRTC,
   | "addTrack"
   | "replaceTrack"
@@ -23,22 +23,19 @@ const EMPTY = () => {
   return;
 };
 
-export function useLibrary(
-  roomId: string,
-  isSimulcastOn: boolean,
-  metadata: PeerMetadata
-): {
-  peerState: PeersState;
+export type UseLibraryType = {
+  peerState: PeersState; // wynikowa strukturka
   errorMessage: string | undefined;
-  peerMetadata: PeerMetadata;
-  peerApi: PeersApi;
-  newWebRtc: NewWebRtcType;
-} {
+  privateApi: PrivateApi; // dodawanie do wynikowej strukturki // low level, do ukrycia
+  publicApi: PublicApi; // api dla uzytkownika
+};
+
+export const useLibrary = (roomId: string, isSimulcastOn: boolean, metadata: PeerMetadata): UseLibraryType => {
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const { state: peerState, api: peerApi } = usePeersState();
   const { webrtc } = useMembraneClient(roomId, metadata, isSimulcastOn, peerApi, setErrorMessage);
 
-  const newWebRtc: NewWebRtcType = useMemo(() => {
+  const newWebRtc: PublicApi = useMemo(() => {
     console.log({ webrtc });
     if (!webrtc) {
       console.log("Empty webrtc");
@@ -81,5 +78,5 @@ export function useLibrary(
     };
   }, [webrtc]);
 
-  return { peerMetadata: metadata, errorMessage, peerState, peerApi, newWebRtc };
-}
+  return { errorMessage, peerState, privateApi: peerApi, publicApi: newWebRtc };
+};

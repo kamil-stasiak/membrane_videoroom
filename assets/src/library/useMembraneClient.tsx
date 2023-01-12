@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { MembraneWebRTC, Peer, SerializedMediaEvent, TrackContext } from "@membraneframework/membrane-webrtc-js";
 import { Socket } from "phoenix";
-import { TrackMetadata, PeerMetadata, PeersApi } from "./usePeerState";
+import { TrackMetadata, PeerMetadata, PrivateApi } from "./usePeerState";
 import { isTrackEncoding, isTrackType } from "./types";
 import { SetErrorMessage } from "./library.types";
 
@@ -20,7 +20,7 @@ export const useMembraneClient = (
   roomId: string,
   peerMetadata: PeerMetadata,
   isSimulcastOn: boolean,
-  api: PeersApi,
+  api: PrivateApi,
   setErrorMessage: SetErrorMessage
 ): UseSetupResult => {
   const [webrtc, setWebrtc] = useState<MembraneWebRTC | undefined>();

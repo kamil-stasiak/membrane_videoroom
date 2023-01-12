@@ -3,14 +3,14 @@ import MediaPlayerPeersSection, { MediaPlayerTileConfig } from "./components/Str
 import ScreenSharingPlayers, { VideoStreamWithMetadata } from "./components/StreamPlayer/ScreenSharingPlayers";
 import React, { FC } from "react";
 import { LOCAL_PEER_NAME, LOCAL_SCREEN_SHARING_ID, LOCAL_VIDEO_ID } from "./consts";
-import { NewWebRtcType } from "../../library/library";
+import { PublicApi } from "../../library/library";
 
 type Props = {
   peers: RemotePeer[];
   localPeer?: LocalPeer;
   showSimulcast?: boolean;
   showDeveloperInfo?: boolean;
-  webrtc?: NewWebRtcType;
+  webrtc?: PublicApi;
 };
 
 const prepareScreenSharingStreams = (
@@ -49,7 +49,7 @@ const prepareScreenSharingStreams = (
           peerId: localPeer?.id,
           peerIcon: localPeer?.metadata?.emoji,
           peerName: LOCAL_PEER_NAME,
-          mediaPlayerId: LOCAL_SCREEN_SHARING_ID
+          mediaPlayerId: LOCAL_SCREEN_SHARING_ID,
         },
         ...peersScreenSharingTracks,
       ]

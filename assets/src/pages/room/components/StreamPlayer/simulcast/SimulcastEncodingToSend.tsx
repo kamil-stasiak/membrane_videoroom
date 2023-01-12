@@ -15,33 +15,15 @@ export const SimulcastEncodingToSend: FC<Props> = ({ localEncoding, disabled }: 
       <label>Encodings to send</label>
       <ul>
         <li>
-          <input
-            disabled={disabled}
-            type="checkbox"
-            name="h"
-            checked={highQuality}
-            onChange={toggleHighQuality}
-          />
+          <input disabled={disabled} type="checkbox" name="h" checked={highQuality} onChange={toggleHighQuality} />
           High
         </li>
         <li>
-          <input
-            disabled={disabled}
-            type="checkbox"
-            name="m"
-            checked={mediumQuality}
-            onChange={toggleMediumQuality}
-          />
+          <input disabled={disabled} type="checkbox" name="m" checked={mediumQuality} onChange={toggleMediumQuality} />
           Medium
         </li>
         <li>
-          <input
-            disabled={disabled}
-            type="checkbox"
-            name="l"
-            checked={lowQuality}
-            onChange={toggleLowQuality}
-          />
+          <input disabled={disabled} type="checkbox" name="l" checked={lowQuality} onChange={toggleLowQuality} />
           Low
         </li>
       </ul>

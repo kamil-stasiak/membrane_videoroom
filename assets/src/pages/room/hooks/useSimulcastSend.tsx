@@ -1,6 +1,6 @@
 import { useToggle } from "./useToggle";
-import { MembraneWebRTC, TrackEncoding } from "@membraneframework/membrane-webrtc-js";
-import { NewWebRtcType } from "../../../library/library";
+import { TrackEncoding } from "@membraneframework/membrane-webrtc-js";
+import { PublicApi } from "../../../library/library";
 
 export type UseSimulcastLocalEncoding = {
   highQuality: boolean;
@@ -11,7 +11,7 @@ export type UseSimulcastLocalEncoding = {
   toggleLowQuality: () => void;
 };
 
-export const useSimulcastSend = (trackId?: string, webrtc?: NewWebRtcType): UseSimulcastLocalEncoding => {
+export const useSimulcastSend = (trackId?: string, webrtc?: PublicApi): UseSimulcastLocalEncoding => {
   const toggleRemoteEncoding = (status: boolean, encodingName: TrackEncoding) => {
     if (!trackId) return;
 

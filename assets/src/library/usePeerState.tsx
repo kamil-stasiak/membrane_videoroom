@@ -52,7 +52,7 @@ export type LocalPeer = {
   tracks: Tracks;
 };
 
-export type PeersApi = {
+export type PrivateApi = {
   addPeers: (peerId: NewPeer[]) => void;
   removePeer: (peerId: string) => void;
   addTrack: (
@@ -73,7 +73,7 @@ export type PeersApi = {
 
 type UsePeersStateResult = {
   state: PeersState;
-  api: PeersApi;
+  api: PrivateApi;
 };
 
 export type PeerMetadata = {
@@ -219,7 +219,7 @@ export const usePeersState = (): UsePeersStateResult => {
     });
   }, []);
 
-  const api: PeersApi = useMemo(
+  const api: PrivateApi = useMemo(
     () => ({
       addPeers,
       removePeer,

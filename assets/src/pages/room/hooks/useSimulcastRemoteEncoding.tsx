@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
-import { MembraneWebRTC, TrackEncoding } from "@membraneframework/membrane-webrtc-js";
-import { NewWebRtcType } from "../../../library/library";
+import { TrackEncoding } from "@membraneframework/membrane-webrtc-js";
+import { PublicApi } from "../../../library/library";
 
 export type UseSimulcastRemoteEncodingResult = {
   desiredEncoding: TrackEncoding;
@@ -11,7 +11,7 @@ export const useSimulcastRemoteEncoding = (
   defaultValue: TrackEncoding,
   peerId?: string,
   videoTrackId?: string,
-  webrtc?: NewWebRtcType
+  webrtc?: PublicApi
 ): UseSimulcastRemoteEncodingResult => {
   const [desiredEncoding, setDesiredEncodingState] = useState<TrackEncoding>(defaultValue);
 

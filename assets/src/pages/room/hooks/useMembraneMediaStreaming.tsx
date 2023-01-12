@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { TrackType } from "../../../library/types";
 import { selectBandwidthLimit } from "../bandwidth";
-import { NewWebRtcType } from "../../../library/library";
+import { PublicApi } from "../../../library/library";
 
 export type MembraneStreaming = {
   trackId: string | null;
@@ -24,11 +24,11 @@ export const useMembraneMediaStreaming = (
   type: TrackType,
   isConnected: boolean,
   simulcast: boolean,
-  webrtc?: NewWebRtcType,
+  webrtc?: PublicApi,
   stream?: MediaStream
 ): MembraneStreaming => {
   const [trackIds, setTrackIds] = useState<TrackIds | null>(null);
-  const [webrtcState, setWebrtcState] = useState<NewWebRtcType | null>(webrtc || null);
+  const [webrtcState, setWebrtcState] = useState<PublicApi | null>(webrtc || null);
   const [trackMetadata, setTrackMetadata] = useState<any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
   const defaultTrackMetadata = useMemo(() => ({ active: true, type }), [type]);
 
