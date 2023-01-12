@@ -1,11 +1,12 @@
 import React, { FC } from "react";
-import { ApiTrack, RemotePeer } from "../../hooks/usePeerState";
+import { ApiTrack, RemotePeer } from "../../../../library/usePeerState";
 import MediaPlayerTile from "./MediaPlayerTile";
 import { MembraneWebRTC, TrackEncoding } from "@membraneframework/membrane-webrtc-js";
 import clsx from "clsx";
-import { StreamSource, TrackType } from "../../../types";
+import { StreamSource, TrackType } from "../../../../library/types";
 import InfoLayer from "./PeerInfoLayer";
 import PeerInfoLayer from "./PeerInfoLayer";
+import { NewWebRtcType } from "../../../../library/library";
 
 export type TrackWithId = {
   stream?: MediaStream;
@@ -73,7 +74,7 @@ type Props = {
   showDeveloperInfo?: boolean;
   selectRemoteTrackEncoding?: (peerId: string, trackId: string, encoding: TrackEncoding) => void;
   oneColumn?: boolean;
-  webrtc?: MembraneWebRTC;
+  webrtc?: NewWebRtcType;
 };
 
 const isLoading = (track: TrackWithId) => track?.stream === undefined && track?.metadata?.active === true;

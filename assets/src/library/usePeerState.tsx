@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { TrackEncoding } from "@membraneframework/membrane-webrtc-js";
-import { TrackType } from "../../types";
+import { TrackType } from "./types";
 
 export type ApiTrack = {
   trackId: string;

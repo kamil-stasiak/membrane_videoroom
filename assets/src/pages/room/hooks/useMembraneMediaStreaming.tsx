@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MembraneWebRTC } from "@membraneframework/membrane-webrtc-js";
-import { TrackType } from "../../types";
+import { TrackType } from "../../../library/types";
 import { selectBandwidthLimit } from "../bandwidth";
+import { NewWebRtcType } from "../../../library/library";
 
 export type MembraneStreaming = {
   trackId: string | null;
@@ -24,11 +24,11 @@ export const useMembraneMediaStreaming = (
   type: TrackType,
   isConnected: boolean,
   simulcast: boolean,
-  webrtc?: MembraneWebRTC,
+  webrtc?: NewWebRtcType,
   stream?: MediaStream
 ): MembraneStreaming => {
   const [trackIds, setTrackIds] = useState<TrackIds | null>(null);
-  const [webrtcState, setWebrtcState] = useState<MembraneWebRTC | null>(webrtc || null);
+  const [webrtcState, setWebrtcState] = useState<NewWebRtcType | null>(webrtc || null);
   const [trackMetadata, setTrackMetadata] = useState<any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
   const defaultTrackMetadata = useMemo(() => ({ active: true, type }), [type]);
 
@@ -62,7 +62,7 @@ export const useMembraneMediaStreaming = (
       const track: MediaStreamTrack | undefined = tracks[0];
       if (!track) throw "Stream has no tracks!";
 
-      webrtc.replaceTrack(trackIds?.remoteId, track)
+      webrtc.replaceTrack(trackIds?.remoteId, track);
     },
     [trackIds, type, webrtc]
   );

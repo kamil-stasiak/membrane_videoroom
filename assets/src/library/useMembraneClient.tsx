@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { MembraneWebRTC, Peer, SerializedMediaEvent, TrackContext } from "@membraneframework/membrane-webrtc-js";
 import { Socket } from "phoenix";
 import { TrackMetadata, PeerMetadata, PeersApi } from "./usePeerState";
-import { isTrackEncoding, isTrackType } from "../../types";
-import { SetErrorMessage } from "../RoomPage";
+import { isTrackEncoding, isTrackType } from "./types";
+import { SetErrorMessage } from "./library.types";
 
 const parseMetadata = (context: TrackContext) => {
   const type = context.metadata.type;

@@ -3,10 +3,10 @@ import MediaPlayer from "./MediaPlayer";
 import { useSimulcastRemoteEncoding } from "../../hooks/useSimulcastRemoteEncoding";
 import { SimulcastEncodingToSend } from "./simulcast/SimulcastEncodingToSend";
 import { SimulcastRemoteLayer } from "./simulcast/SimulcastRemoteLayer";
-import { MembraneWebRTC } from "@membraneframework/membrane-webrtc-js";
 import { UseSimulcastLocalEncoding, useSimulcastSend } from "../../hooks/useSimulcastSend";
-import { StreamSource } from "../../../types";
+import { StreamSource } from "../../../../library/types";
 import { TrackWithId } from "./MediaPlayerPeersSection";
+import { NewWebRtcType } from "../../../../library/library";
 
 export interface Props {
   peerId?: string;
@@ -17,7 +17,7 @@ export interface Props {
   showSimulcast?: boolean;
   streamSource?: StreamSource;
   layers?: JSX.Element;
-  webrtc?: MembraneWebRTC;
+  webrtc?: NewWebRtcType;
 }
 
 const MediaPlayerTile: FC<Props> = ({

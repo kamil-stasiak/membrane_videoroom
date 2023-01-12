@@ -1,14 +1,14 @@
-import React, { FC, useState } from "react";
+import React, { FC } from "react";
 import { AUDIO_TRACKS_CONFIG, SCREEN_SHARING_TRACKS_CONFIG, VIDEO_TRACKS_CONFIG } from "./consts";
-import { useMembraneClient } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
-import { PeerMetadata, RemotePeer, usePeersState } from "./hooks/usePeerState";
+import { RemotePeer } from "../../library/usePeerState";
 import { useToggle } from "./hooks/useToggle";
 import { VideochatSection } from "./VideochatSection";
-import { getRandomAnimalEmoji } from "./utils";
 import { useStreamManager } from "./hooks/useStreamManager";
 import { StreamingMode } from "./hooks/useMembraneMediaStreaming";
 import { useAcquireWakeLockAutomatically } from "./hooks/useAcquireWakeLockAutomatically";
+import { useLibrary } from "../../library/library";
+import { useVideoroomWrapper } from "../../library-usage/videoroom-wrapper";
 
 type Props = {
   displayName: string;
@@ -18,31 +18,26 @@ type Props = {
   autostartStreaming?: boolean;
 };
 
-export type SetErrorMessage = (value: string) => void;
-
 const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, autostartStreaming }: Props) => {
   const wakeLock = useAcquireWakeLockAutomatically();
 
   const mode: StreamingMode = manualMode ? "manual" : "automatic";
 
-  const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const [showSimulcastMenu, toggleSimulcastMenu] = useToggle(false);
   const [showDeveloperInfo, toggleDeveloperInfo] = useToggle(false);
-  const [peerMetadata] = useState<PeerMetadata>({ emoji: getRandomAnimalEmoji(), displayName });
 
-  const { state: peerState, api: peerApi } = usePeersState();
-  const { webrtc } = useMembraneClient(roomId, peerMetadata, isSimulcastOn, peerApi, setErrorMessage);
+  const library = useVideoroomWrapper(roomId, displayName, isSimulcastOn);
 
-  const isConnected = !!peerState?.local?.id;
+  const isConnected = !!library.peerState?.local?.id;
 
   const camera = useStreamManager(
     "camera",
     mode,
     isConnected,
     isSimulcastOn,
-    webrtc,
+    library.newWebRtc,
     VIDEO_TRACKS_CONFIG,
-    peerApi,
+    library.peerApi,
     autostartStreaming
   );
   const audio = useStreamManager(
@@ -50,9 +45,9 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     mode,
     isConnected,
     isSimulcastOn,
-    webrtc,
+    library.newWebRtc,
     AUDIO_TRACKS_CONFIG,
-    peerApi,
+    library.peerApi,
     autostartStreaming
   );
   const screenSharing = useStreamManager(
@@ -60,16 +55,16 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     mode,
     isConnected,
     isSimulcastOn,
-    webrtc,
+    library.newWebRtc,
     SCREEN_SHARING_TRACKS_CONFIG,
-    peerApi,
+    library.peerApi,
     false
   );
 
   return (
     <section>
       <div className="flex flex-col h-screen relative">
-        {errorMessage && <div className="bg-red-700 text-white p-1 w-full">{errorMessage}</div>}
+        {library.errorMessage && <div className="bg-red-700 text-white p-1 w-full">{library.errorMessage}</div>}
 
         {showDeveloperInfo && (
           <div className="absolute text-white text-shadow-lg right-0 top-0 p-2 flex flex-col text-right">
@@ -87,9 +82,9 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
             <h3 className="text-xl font-medium text-white">
               Participants{" "}
               <span>
-                {peerMetadata.emoji} {peerMetadata.displayName}
+                {library.peerMetadata.emoji} {library.peerMetadata.displayName}
               </span>
-              {peerState.remote.map((peer: RemotePeer) => (
+              {library.peerState.remote.map((peer: RemotePeer) => (
                 <span key={peer.id} title={peer.id}>
                   {peer.emoji} {peer.displayName}
                 </span>
@@ -97,11 +92,11 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
             </h3>
           </header>
           <VideochatSection
-            peers={peerState.remote}
-            localPeer={peerState.local}
+            peers={library.peerState.remote}
+            localPeer={library.peerState.local}
             showSimulcast={showSimulcastMenu}
             showDeveloperInfo={showDeveloperInfo}
-            webrtc={webrtc}
+            webrtc={library.newWebRtc}
           />
         </section>
       </div>

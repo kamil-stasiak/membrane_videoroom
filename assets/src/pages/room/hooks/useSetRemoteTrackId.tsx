@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import { PeersApi } from "./usePeerState";
-import { TrackType } from "../../types";
+import { PeersApi } from "../../../library/usePeerState";
+import { TrackType } from "../../../library/types";
 
 export const useSetRemoteTrackId = (type: TrackType, trackId: string | null, api: PeersApi | null) => {
   useEffect(() => {

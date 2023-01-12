@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import { TrackEncoding } from "@membraneframework/membrane-webrtc-js";
-import { isTrackEncoding } from "../../../../types";
+import { isTrackEncoding } from "../../../../../library/types";
 
 type Props = {
   setDesiredEncoding: (encoding: TrackEncoding) => void;
