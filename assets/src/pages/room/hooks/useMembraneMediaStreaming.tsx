@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { TrackType } from "../../../library/types";
 import { selectBandwidthLimit } from "../bandwidth";
 import { PublicApi } from "../../../library/library";
+import { TrackType } from "../../../library/library.types";
 
 export type MembraneStreaming = {
   trackId: string | null;

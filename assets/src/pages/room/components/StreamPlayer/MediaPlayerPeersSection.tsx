@@ -3,10 +3,10 @@ import { ApiTrack, RemotePeer } from "../../../../library/usePeerState";
 import MediaPlayerTile from "./MediaPlayerTile";
 import { TrackEncoding } from "@membraneframework/membrane-webrtc-js";
 import clsx from "clsx";
-import { StreamSource, TrackType } from "../../../../library/types";
 import InfoLayer from "./PeerInfoLayer";
 import PeerInfoLayer from "./PeerInfoLayer";
 import { PublicApi } from "../../../../library/library";
+import { StreamSource, TrackType } from "../../../../library/library.types";
 
 export type TrackWithId = {
   stream?: MediaStream;

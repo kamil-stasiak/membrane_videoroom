@@ -4,9 +4,9 @@ import { useSimulcastRemoteEncoding } from "../../hooks/useSimulcastRemoteEncodi
 import { SimulcastEncodingToSend } from "./simulcast/SimulcastEncodingToSend";
 import { SimulcastRemoteLayer } from "./simulcast/SimulcastRemoteLayer";
 import { UseSimulcastLocalEncoding, useSimulcastSend } from "../../hooks/useSimulcastSend";
-import { StreamSource } from "../../../../library/types";
 import { TrackWithId } from "./MediaPlayerPeersSection";
 import { PublicApi } from "../../../../library/library";
+import { StreamSource } from "../../../../library/library.types";
 
 export interface Props {
   peerId?: string;

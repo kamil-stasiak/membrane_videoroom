@@ -1,85 +1,15 @@
 import { useCallback, useMemo, useState } from "react";
 import { TrackEncoding } from "@membraneframework/membrane-webrtc-js";
-import { TrackType } from "./types";
-
-export type ApiTrack = {
-  trackId: string;
-  mediaStreamTrack?: MediaStreamTrack;
-  mediaStream?: MediaStream;
-  metadata?: TrackMetadata;
-  encoding?: TrackEncoding;
-};
-
-export type RemotePeer = {
-  tracks: ApiTrack[];
-} & NewPeer;
-
-type PeersMap = {
-  [peerId: string]: RemotePeer;
-};
-
-// todo move display name and emoji to metadata
-export type NewPeer = {
-  id: string;
-  displayName?: string;
-  emoji?: string;
-  source: "local" | "remote";
-};
-
-export type TrackMetadata = {
-  type?: TrackType;
-};
-
-export type PeersState = {
-  local?: LocalPeer;
-  remote: RemotePeer[];
-};
-
-export type Track = {
-  stream?: MediaStream;
-  trackId?: string;
-  enabled: boolean;
-  metadata?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-};
-
-export type Tracks = {
-  [Property in TrackType]?: Track;
-};
-
-export type LocalPeer = {
-  id?: string;
-  metadata?: PeerMetadata;
-  tracks: Tracks;
-};
-
-export type PrivateApi = {
-  addPeers: (peerId: NewPeer[]) => void;
-  removePeer: (peerId: string) => void;
-  addTrack: (
-    peerId: string,
-    trackId: string,
-    mediaStreamTrack?: MediaStreamTrack,
-    mediaStream?: MediaStream,
-    metadata?: TrackMetadata
-  ) => void;
-  removeTrack: (peerId: string, trackId: string) => void;
-  setMetadata: (peerId: string, trackId: string, metadata: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
-  setEncoding: (peerId: string, trackId: string, encoding: TrackEncoding) => void;
-  setLocalPeer: (id: string, metadata?: PeerMetadata) => void;
-  setLocalStream: (type: TrackType, enabled: boolean, stream: MediaStream | undefined) => void;
-  setLocalTrackId: (type: TrackType, trackId: string | null) => void;
-  setLocalTrackMetadata: (type: TrackType, metadata?: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
-};
-
-type UsePeersStateResult = {
-  state: PeersState;
-  api: PrivateApi;
-};
-
-export type PeerMetadata = {
-  emoji?: string;
-  displayName?: string;
-};
+import type {
+  ApiTrack,
+  LocalPeer,
+  NewPeer,
+  PeerMetadata,
+  PeersMap, PeersState, PrivateApi,
+  RemotePeer,
+  TrackMetadata, TrackType,
+  UsePeersStateResult
+} from "./library.types";
 
 const copyTrack = (peer: RemotePeer, trackId: string) => peer.tracks.find((track) => track.trackId === trackId);
 

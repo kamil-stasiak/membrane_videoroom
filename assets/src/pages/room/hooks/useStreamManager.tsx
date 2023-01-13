@@ -4,8 +4,8 @@ import { useSetRemoteTrackId } from "./useSetRemoteTrackId";
 import { useSetLocalTrackMetadata } from "./useSetLocalTrackMetadata";
 import { DisplayMediaStreamConfig, MediaStreamConfig, useMedia, UseMediaResult } from "./useMedia";
 import { PrivateApi } from "../../../library/usePeerState";
-import { TrackType } from "../../../library/types";
 import { PublicApi } from "../../../library/library";
+import { TrackType } from "../../../library/library.types";
 
 export type Streams = {
   remote: MembraneStreaming;

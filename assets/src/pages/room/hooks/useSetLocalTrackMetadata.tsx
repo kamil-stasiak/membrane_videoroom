@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { PrivateApi } from "../../../library/usePeerState";
-import { TrackType } from "../../../library/types";
+import { TrackType } from "../../../library/library.types";
 
 export const useSetLocalTrackMetadata = (
   type: TrackType,
