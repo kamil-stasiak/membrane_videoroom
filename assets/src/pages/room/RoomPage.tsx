@@ -2,13 +2,17 @@ import React, { FC, useState } from "react";
 import { AUDIO_TRACKS_CONFIG, SCREEN_SHARING_TRACKS_CONFIG, VIDEO_TRACKS_CONFIG } from "./consts";
 import { useMembraneClient } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
-import { PeerMetadata, RemotePeer, usePeersState } from "./hooks/usePeerState";
+import { PeerMetadata, RemotePeer } from "./hooks/usePeerState";
 import { useToggle } from "./hooks/useToggle";
 import { VideochatSection } from "./VideochatSection";
 import { getRandomAnimalEmoji } from "./utils";
 import { useStreamManager } from "./hooks/useStreamManager";
 import { StreamingMode } from "./hooks/useMembraneMediaStreaming";
 import { useAcquireWakeLockAutomatically } from "./hooks/useAcquireWakeLockAutomatically";
+import { TrackContext } from "@membraneframework/membrane-webrtc-js";
+import { isTrackType } from "../types";
+import { useFullState } from "./useFullState";
+import { useClientErrorState } from "./useClientErrorState";
 
 type Props = {
   displayName: string;
@@ -20,6 +24,12 @@ type Props = {
 
 export type SetErrorMessage = (value: string) => void;
 
+export const parseMetadata = (context: TrackContext) => {
+  const type = context.metadata.type;
+  const active = context.metadata.active;
+  return isTrackType(type) ? { type, active } : { active };
+};
+
 const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, autostartStreaming }: Props) => {
   const wakeLock = useAcquireWakeLockAutomatically();
 
@@ -30,19 +40,21 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
   const [showDeveloperInfo, toggleDeveloperInfo] = useToggle(false);
   const [peerMetadata] = useState<PeerMetadata>({ emoji: getRandomAnimalEmoji(), displayName });
 
-  const { state: peerState, api: peerApi } = usePeersState();
-  const { webrtc } = useMembraneClient(roomId, peerMetadata, isSimulcastOn, peerApi, setErrorMessage);
+  const clientWrapper = useMembraneClient(roomId, peerMetadata, isSimulcastOn, setErrorMessage);
 
-  const isConnected = !!peerState?.local?.id;
+  const { state, api } = useFullState(clientWrapper, peerMetadata);
+  useClientErrorState(clientWrapper, setErrorMessage);
+
+  const isConnected = !!state?.local?.id;
 
   const camera = useStreamManager(
     "camera",
     mode,
     isConnected,
     isSimulcastOn,
-    webrtc,
+    clientWrapper?.webrtc,
     VIDEO_TRACKS_CONFIG,
-    peerApi,
+    api,
     autostartStreaming
   );
   const audio = useStreamManager(
@@ -50,9 +62,9 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     mode,
     isConnected,
     isSimulcastOn,
-    webrtc,
+    clientWrapper?.webrtc,
     AUDIO_TRACKS_CONFIG,
-    peerApi,
+    api,
     autostartStreaming
   );
   const screenSharing = useStreamManager(
@@ -60,9 +72,9 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     mode,
     isConnected,
     isSimulcastOn,
-    webrtc,
+    clientWrapper?.webrtc,
     SCREEN_SHARING_TRACKS_CONFIG,
-    peerApi,
+    api,
     false
   );
 
@@ -89,7 +101,7 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
               <span>
                 {peerMetadata.emoji} {peerMetadata.displayName}
               </span>
-              {peerState.remote.map((peer: RemotePeer) => (
+              {state.remote.map((peer: RemotePeer) => (
                 <span key={peer.id} title={peer.id}>
                   {peer.emoji} {peer.displayName}
                 </span>
@@ -97,11 +109,11 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
             </h3>
           </header>
           <VideochatSection
-            peers={peerState.remote}
-            localPeer={peerState.local}
+            peers={state.remote}
+            localPeer={state.local}
             showSimulcast={showSimulcastMenu}
             showDeveloperInfo={showDeveloperInfo}
-            webrtc={webrtc}
+            webrtc={clientWrapper?.webrtc}
           />
         </section>
       </div>

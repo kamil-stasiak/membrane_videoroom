@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 import { MembraneWebRTC, Peer, SerializedMediaEvent, TrackContext } from "@membraneframework/membrane-webrtc-js";
 import { Socket } from "phoenix";
-import { TrackMetadata, PeerMetadata, PeersApi } from "./usePeerState";
-import { isTrackEncoding, isTrackType } from "../../types";
+import { PeerMetadata } from "./usePeerState";
 import { SetErrorMessage } from "../RoomPage";
-
-const parseMetadata = (context: TrackContext) => {
-  const type = context.metadata.type;
-  const active = context.metadata.active;
-  return isTrackType(type) ? { type, active } : { active };
-};
+import { Callbacks, TrackEncoding } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
+import EventEmitter from "events";
+import TypedEmitter from "typed-emitter/rxjs";
 
 type UseSetupResult = {
   webrtc?: MembraneWebRTC;
+};
+
+export type UseMembraneClientType = {
+  webrtc: MembraneWebRTC;
+  messageEmitter: TypedEmitter<Partial<Callbacks>>;
 };
 
 // todo extract callbacks
@@ -20,12 +21,13 @@ export const useMembraneClient = (
   roomId: string,
   peerMetadata: PeerMetadata,
   isSimulcastOn: boolean,
-  api: PeersApi,
   setErrorMessage: SetErrorMessage
-): UseSetupResult => {
-  const [webrtc, setWebrtc] = useState<MembraneWebRTC | undefined>();
+): UseMembraneClientType | null => {
+  const [webrtc, setWebrtc] = useState<UseMembraneClientType | null>(null);
 
   useEffect(() => {
+    const messageEmitter: TypedEmitter<Partial<Callbacks>> = new EventEmitter() as TypedEmitter<Partial<Callbacks>>;
+
     const socket = new Socket("/socket");
     socket.connect();
     const socketOnCloseRef = socket.onClose(() => cleanUp());
@@ -48,60 +50,47 @@ export const useMembraneClient = (
       callbacks: {
         onSendMediaEvent: (mediaEvent: SerializedMediaEvent) => {
           webrtcChannel.push("mediaEvent", { data: mediaEvent });
+          messageEmitter.emit("onSendMediaEvent", mediaEvent);
         },
         onConnectionError: (message) => {
-          console.error("onConnectionError occurred");
-          console.error(message);
-          setErrorMessage(message);
+          messageEmitter.emit("onConnectionError", message);
         },
         // todo [Peer] -> Peer[] ???
-        onJoinSuccess: (peerId, peersInRoom: Peer[]) => {
-          api.setLocalPeer(peerId, peerMetadata);
-          api.addPeers(
-            peersInRoom.map((peer) => ({
-              id: peer.id,
-              displayName: peer.metadata.displayName,
-              emoji: peer.metadata.emoji,
-              source: "remote",
-            }))
-          );
+        onJoinSuccess: (peerId, peersInRoom: [Peer]) => {
+          messageEmitter.emit("onJoinSuccess", peerId, peersInRoom);
         },
         onTrackReady: (ctx) => {
-          if (!ctx?.peer || !ctx?.track || !ctx?.stream) return;
-          const metadata: TrackMetadata = parseMetadata(ctx);
-          api.addTrack(ctx.peer.id, ctx.trackId, ctx.track, ctx.stream, metadata);
+          messageEmitter.emit("onTrackReady", ctx);
         },
         onTrackAdded: (ctx) => {
-          if (!ctx?.peer) return;
-          const metadata: TrackMetadata = parseMetadata(ctx);
-          // In onTrackAdded method we know, that peer has just added a new track, but right now, the server is still processing it.
-          // We register this empty track (with mediaStreamTrack and mediaStream set to undefined) to show the loading indicator.
-          api.addTrack(ctx.peer.id, ctx.trackId, undefined, undefined, metadata);
+          messageEmitter.emit("onTrackAdded", ctx);
         },
         onTrackRemoved: (ctx) => {
-          const peerId = ctx?.peer?.id;
-          if (!peerId) return;
-          api.removeTrack(peerId, ctx.trackId);
+          messageEmitter.emit("onTrackRemoved", ctx);
         },
         onPeerJoined: (peer) => {
-          api.addPeers([
-            {
-              id: peer.id,
-              displayName: peer.metadata.displayName,
-              emoji: peer.metadata.emoji,
-              source: "remote",
-            },
-          ]);
+          messageEmitter.emit("onPeerJoined", peer);
         },
         onPeerLeft: (peer) => {
-          api.removePeer(peer.id);
+          messageEmitter.emit("onPeerLeft", peer);
         },
-        onTrackEncodingChanged: (peerId: string, trackId: string, encoding: string) => {
-          if (!isTrackEncoding(encoding)) return;
-          api.setEncoding(peerId, trackId, encoding);
+        onTrackEncodingChanged: (peerId: string, trackId: string, encoding: TrackEncoding) => {
+          messageEmitter.emit("onTrackEncodingChanged", peerId, trackId, encoding);
         },
         onTrackUpdated: (ctx: TrackContext) => {
-          api.setMetadata(ctx.peer.id, ctx.trackId, ctx.metadata);
+          messageEmitter.emit("onTrackUpdated", ctx);
+        },
+        onTracksPriorityChanged: (enabledTracks: TrackContext[], disabledTracks: TrackContext[]) => {
+          messageEmitter.emit("onTracksPriorityChanged", enabledTracks, disabledTracks);
+        },
+        onJoinError: (metadata) => {
+          messageEmitter.emit("onJoinError", metadata);
+        },
+        onRemoved: (reason) => {
+          messageEmitter.emit("onRemoved", reason);
+        },
+        onPeerUpdated: (peer: Peer) => {
+          messageEmitter.emit("onPeerUpdated", peer);
         },
       },
     });
@@ -118,7 +107,7 @@ export const useMembraneClient = (
       .join()
       .receive("ok", () => {
         webrtc.join(peerMetadata);
-        setWebrtc(webrtc);
+        setWebrtc({ webrtc, messageEmitter });
       })
       .receive("error", (response) => {
         setErrorMessage("Connecting error");
@@ -130,13 +119,13 @@ export const useMembraneClient = (
       webrtc.leave();
       webrtcChannel.leave();
       socket.off([socketOnCloseRef, socketOnErrorRef]);
-      setWebrtc(undefined);
+      setWebrtc(null);
     };
 
     return () => {
       cleanUp();
     };
-  }, [api, isSimulcastOn, peerMetadata, roomId, setErrorMessage]);
+  }, [isSimulcastOn, peerMetadata, roomId, setErrorMessage]);
 
-  return { webrtc };
+  return webrtc;
 };

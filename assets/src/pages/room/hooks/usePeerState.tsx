@@ -71,7 +71,7 @@ export type PeersApi = {
   setLocalTrackMetadata: (type: TrackType, metadata?: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
-type UsePeersStateResult = {
+export type UsePeersStateResult = {
   state: PeersState;
   api: PeersApi;
 };
