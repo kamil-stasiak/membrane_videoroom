@@ -12,8 +12,10 @@ export const useFullState = (
 ): UsePeersStateResult => {
   const { state, api } = usePeersState();
 
-  const callbacks: Partial<Callbacks> = useMemo(
-    () => ({
+  useEffect(() => {
+    if (!clientWrapper) return;
+
+    const callbacks: Partial<Callbacks> = {
       onJoinSuccess: (peerId, peersInRoom: Peer[]) => {
         api.setLocalPeer(peerId, peerMetadata);
         api.addPeers(
@@ -62,42 +64,28 @@ export const useFullState = (
       onTrackUpdated: (ctx: TrackContext) => {
         api.setMetadata(ctx.peer.id, ctx.trackId, ctx.metadata);
       },
-    }),
-    [api, peerMetadata]
-  );
+    };
 
-  useEffect(() => {
-    if (!clientWrapper) return;
-
-    clientWrapper.messageEmitter.on("onSendMediaEvent", callbacks.onSendMediaEvent);
     clientWrapper.messageEmitter.on("onJoinSuccess", callbacks.onJoinSuccess);
-    clientWrapper.messageEmitter.on("onJoinError", callbacks.onJoinError);
     clientWrapper.messageEmitter.on("onTrackReady", callbacks.onTrackReady);
     clientWrapper.messageEmitter.on("onTrackAdded", callbacks.onTrackAdded);
     clientWrapper.messageEmitter.on("onTrackRemoved", callbacks.onTrackRemoved);
     clientWrapper.messageEmitter.on("onTrackUpdated", callbacks.onTrackUpdated);
     clientWrapper.messageEmitter.on("onPeerJoined", callbacks.onPeerJoined);
     clientWrapper.messageEmitter.on("onPeerLeft", callbacks.onPeerLeft);
-    clientWrapper.messageEmitter.on("onPeerUpdated", callbacks.onPeerUpdated);
-    clientWrapper.messageEmitter.on("onTracksPriorityChanged", callbacks.onTracksPriorityChanged);
     clientWrapper.messageEmitter.on("onTrackEncodingChanged", callbacks.onTrackEncodingChanged);
-    clientWrapper.messageEmitter.on("onRemoved", callbacks.onRemoved);
 
     return () => {
-      clientWrapper.messageEmitter.off("onSendMediaEvent", callbacks.onSendMediaEvent);
       clientWrapper.messageEmitter.off("onJoinSuccess", callbacks.onJoinSuccess);
-      clientWrapper.messageEmitter.off("onJoinError", callbacks.onJoinError);
       clientWrapper.messageEmitter.off("onTrackReady", callbacks.onTrackReady);
       clientWrapper.messageEmitter.off("onTrackAdded", callbacks.onTrackAdded);
       clientWrapper.messageEmitter.off("onTrackRemoved", callbacks.onTrackRemoved);
       clientWrapper.messageEmitter.off("onTrackUpdated", callbacks.onTrackUpdated);
       clientWrapper.messageEmitter.off("onPeerJoined", callbacks.onPeerJoined);
       clientWrapper.messageEmitter.off("onPeerLeft", callbacks.onPeerLeft);
-      clientWrapper.messageEmitter.off("onPeerUpdated", callbacks.onPeerUpdated);
-      clientWrapper.messageEmitter.off("onTracksPriorityChanged", callbacks.onTracksPriorityChanged);
       clientWrapper.messageEmitter.off("onTrackEncodingChanged", callbacks.onTrackEncodingChanged);
-      clientWrapper.messageEmitter.off("onRemoved", callbacks.onRemoved);
     };
-  }, [callbacks, clientWrapper]);
+  }, [clientWrapper]);
+
   return { state, api };
 };

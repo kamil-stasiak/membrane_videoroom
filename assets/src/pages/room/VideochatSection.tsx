@@ -11,6 +11,7 @@ type Props = {
   showSimulcast?: boolean;
   showDeveloperInfo?: boolean;
   webrtc?: MembraneWebRTC;
+  clientWrapper?: any;
 };
 
 const prepareScreenSharingStreams = (
@@ -49,7 +50,7 @@ const prepareScreenSharingStreams = (
           peerId: localPeer?.id,
           peerIcon: localPeer?.metadata?.emoji,
           peerName: LOCAL_PEER_NAME,
-          mediaPlayerId: LOCAL_SCREEN_SHARING_ID
+          mediaPlayerId: LOCAL_SCREEN_SHARING_ID,
         },
         ...peersScreenSharingTracks,
       ]
@@ -59,7 +60,7 @@ const prepareScreenSharingStreams = (
   return { screenSharingStreams, isScreenSharingActive };
 };
 
-export const VideochatSection: FC<Props> = ({ peers, localPeer, showSimulcast, webrtc, showDeveloperInfo }: Props) => {
+export const VideochatSection: FC<Props> = ({ peers, localPeer, showSimulcast, webrtc, showDeveloperInfo, clientWrapper }: Props) => {
   const localUser: MediaPlayerTileConfig = {
     peerId: localPeer?.id,
     displayName: LOCAL_PEER_NAME,
@@ -82,6 +83,7 @@ export const VideochatSection: FC<Props> = ({ peers, localPeer, showSimulcast, w
         {isScreenSharingActive && <ScreenSharingPlayers streams={screenSharingStreams || []} />}
 
         <MediaPlayerPeersSection
+          clientWrapper={clientWrapper}
           peers={peers}
           localUser={localUser}
           showSimulcast={showSimulcast}

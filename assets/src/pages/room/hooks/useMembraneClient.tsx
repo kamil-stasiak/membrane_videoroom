@@ -4,8 +4,8 @@ import { Socket } from "phoenix";
 import { PeerMetadata } from "./usePeerState";
 import { SetErrorMessage } from "../RoomPage";
 import { Callbacks, TrackEncoding } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
-import EventEmitter from "events";
-import TypedEmitter from "typed-emitter/rxjs";
+import EventEmitter from "events"
+import TypedEmitter from "typed-emitter"
 
 type UseSetupResult = {
   webrtc?: MembraneWebRTC;

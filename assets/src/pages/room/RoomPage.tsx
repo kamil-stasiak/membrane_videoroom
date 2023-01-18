@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { AUDIO_TRACKS_CONFIG, SCREEN_SHARING_TRACKS_CONFIG, VIDEO_TRACKS_CONFIG } from "./consts";
 import { useMembraneClient } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
@@ -13,6 +13,7 @@ import { TrackContext } from "@membraneframework/membrane-webrtc-js";
 import { isTrackType } from "../types";
 import { useFullState } from "./useFullState";
 import { useClientErrorState } from "./useClientErrorState";
+import { usePeersStateNew } from "./usePeersState";
 
 type Props = {
   displayName: string;
@@ -44,6 +45,11 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
 
   const { state, api } = useFullState(clientWrapper, peerMetadata);
   useClientErrorState(clientWrapper, setErrorMessage);
+  const { state: peersState } = usePeersStateNew(clientWrapper, peerMetadata);
+
+  useEffect(() => {
+    console.log({ name: "peers", peersState });
+  }, [peersState]);
 
   const isConnected = !!state?.local?.id;
 
@@ -101,16 +107,17 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
               <span>
                 {peerMetadata.emoji} {peerMetadata.displayName}
               </span>
-              {state.remote.map((peer: RemotePeer) => (
-                <span key={peer.id} title={peer.id}>
-                  {peer.emoji} {peer.displayName}
-                </span>
-              ))}
+              {/*{state.remote.map((peer: RemotePeer) => (*/}
+              {/*  <span key={peer.id} title={peer.id}>*/}
+              {/*    {peer.emoji} {peer.displayName}*/}
+              {/*  </span>*/}
+              {/*))}*/}
             </h3>
           </header>
           <VideochatSection
-            peers={state.remote}
-            localPeer={state.local}
+            clientWrapper={clientWrapper}
+            peers={peersState.remote}
+            localPeer={peersState.local}
             showSimulcast={showSimulcastMenu}
             showDeveloperInfo={showDeveloperInfo}
             webrtc={clientWrapper?.webrtc}
