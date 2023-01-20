@@ -7,14 +7,14 @@ import { Callbacks, TrackEncoding } from "@membraneframework/membrane-webrtc-js/
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 
-type UseSetupResult = {
-  webrtc?: MembraneWebRTC;
-};
+export type ConnectionStatus = "before-connection" | "connected" | "connecting" | "error";
 
 export type UseMembraneClientType = {
   webrtc: MembraneWebRTC;
   messageEmitter: TypedEmitter<Partial<Callbacks>>;
   signaling: Channel;
+  webrtcConnectionStatus: ConnectionStatus;
+  signalingStatus: ConnectionStatus;
 };
 
 // todo extract callbacks
@@ -22,9 +22,9 @@ export const useMembraneClient = (
   roomId: string,
   peerMetadata: PeerMetadata,
   isSimulcastOn: boolean,
-  setErrorMessage: SetErrorMessage,
+  setErrorMessage: SetErrorMessage
 ): UseMembraneClientType | null => {
-  const [webrtc, setWebrtc] = useState<UseMembraneClientType | null>(null);
+  const [state, setState] = useState<UseMembraneClientType | null>(null);
 
   useEffect(() => {
     const messageEmitter: TypedEmitter<Partial<Callbacks>> = new EventEmitter() as TypedEmitter<Partial<Callbacks>>;
@@ -54,10 +54,24 @@ export const useMembraneClient = (
           messageEmitter.emit("onSendMediaEvent", mediaEvent);
         },
         onConnectionError: (message) => {
+          setState({
+            webrtc,
+            messageEmitter,
+            signaling,
+            signalingStatus: "connected",
+            webrtcConnectionStatus: "error",
+          });
           messageEmitter.emit("onConnectionError", message);
         },
         // todo [Peer] -> Peer[] ???
         onJoinSuccess: (peerId, peersInRoom: [Peer]) => {
+          setState({
+            webrtc,
+            messageEmitter,
+            signaling,
+            signalingStatus: "connected",
+            webrtcConnectionStatus: "connected",
+          });
           messageEmitter.emit("onJoinSuccess", peerId, peersInRoom);
         },
         onTrackReady: (ctx) => {
@@ -104,23 +118,45 @@ export const useMembraneClient = (
       return;
     });
 
+    setState({
+      webrtc,
+      messageEmitter,
+      signaling,
+      signalingStatus: "connecting",
+      webrtcConnectionStatus: "before-connection",
+    });
+
     signaling
       .join()
       .receive("ok", () => {
         webrtc.join(peerMetadata);
-        setWebrtc({ webrtc, messageEmitter, signaling });
+        setState({
+          webrtc,
+          messageEmitter,
+          signaling,
+          signalingStatus: "connected",
+          webrtcConnectionStatus: "connecting",
+        });
       })
       .receive("error", (response) => {
         setErrorMessage("Connecting error");
         console.error("Received error status");
         console.error(response);
+
+        setState({
+          webrtc,
+          messageEmitter,
+          signaling,
+          signalingStatus: "error",
+          webrtcConnectionStatus: "before-connection",
+        });
       });
 
     const cleanUp = () => {
       webrtc.leave();
       signaling.leave();
       socket.off([socketOnCloseRef, socketOnErrorRef]);
-      setWebrtc(null);
+      setState(null);
     };
 
     return () => {
@@ -128,5 +164,5 @@ export const useMembraneClient = (
     };
   }, [isSimulcastOn, peerMetadata, roomId, setErrorMessage]);
 
-  return webrtc;
+  return state;
 };

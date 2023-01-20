@@ -1,13 +1,16 @@
 import { useEffect } from "react";
-import { PeersApi } from "./usePeerState";
 import { TrackType } from "../../types";
+import { SetLocalTrackMetadata } from "../../../library/useLoclPeerState";
 
 export const useSetLocalTrackMetadata = (
   type: TrackType,
-  api: PeersApi,
-  metadata: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  setLocalTrackMetadata: SetLocalTrackMetadata,
+  metadata: any // eslint-disable-line @typescript-eslint/no-explicit-any
 ) => {
   useEffect(() => {
-    api.setLocalTrackMetadata(type, metadata);
-  }, [type, api, metadata]);
+    // todo fix objects comparison
+    // if(api.metadata)
+
+    setLocalTrackMetadata(type, metadata);
+  }, [type, setLocalTrackMetadata, metadata]);
 };

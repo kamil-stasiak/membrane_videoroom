@@ -1,5 +1,5 @@
-import { ApiTrack } from "./hooks/usePeerState";
-import { UseMembraneClientType } from "./hooks/useMembraneClient";
+import { ApiTrack } from "../pages/room/hooks/usePeerState";
+import { UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
 import { Callbacks } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
 import { useEffect, useState } from "react";
 import { TrackContext } from "@membraneframework/membrane-webrtc-js";

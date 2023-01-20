@@ -1,11 +1,13 @@
 import { MembraneStreaming, StreamingMode, useMembraneMediaStreaming } from "./useMembraneMediaStreaming";
 import { useSetLocalUserTrack } from "./useSetLocalUserTrack";
-import { useSetRemoteTrackId } from "./useSetRemoteTrackId";
-import { useSetLocalTrackMetadata } from "./useSetLocalTrackMetadata";
 import { MembraneWebRTC } from "@membraneframework/membrane-webrtc-js";
 import { DisplayMediaStreamConfig, MediaStreamConfig, useMedia, UseMediaResult } from "./useMedia";
-import { PeersApi } from "./usePeerState";
 import { TrackType } from "../../types";
+import { UseLocalPeersState } from "../../../library/useLoclPeerState";
+import { useSetRemoteTrackId } from "./useSetRemoteTrackId";
+import { useSetLocalTrackMetadata } from "./useSetLocalTrackMetadata";
+import { UseMembraneClientType } from "./useMembraneClient";
+import { useEffect } from "react";
 
 export type Streams = {
   remote: MembraneStreaming;
@@ -17,16 +19,17 @@ export const useStreamManager = (
   mode: StreamingMode,
   isConnected: boolean,
   simulcast: boolean,
-  webrtc: MembraneWebRTC | undefined,
+  clientWrapper: UseMembraneClientType | null,
   config: MediaStreamConfig | DisplayMediaStreamConfig,
-  peersApi: PeersApi,
+  peersApi: UseLocalPeersState,
   autostartStreaming?: boolean
 ): Streams => {
   const local = useMedia(config, autostartStreaming);
-  const remote = useMembraneMediaStreaming(mode, type, isConnected, simulcast, webrtc, local.stream);
-  useSetLocalUserTrack(type, peersApi, local.stream, local.isEnabled);
-  useSetRemoteTrackId(type, remote.trackId, peersApi);
-  useSetLocalTrackMetadata(type, peersApi, remote.trackMetadata);
+  const remote = useMembraneMediaStreaming(mode, type, isConnected, simulcast, clientWrapper?.webrtc, local.stream);
+  useSetLocalUserTrack(type, peersApi.setLocalStream, local.stream, local.isEnabled);
+  useSetRemoteTrackId(type, peersApi.setLocalTrackId, remote.trackId);
+  useSetLocalTrackMetadata(type, peersApi.setLocalTrackMetadata, remote.trackMetadata);
+
 
   return { local, remote };
 };

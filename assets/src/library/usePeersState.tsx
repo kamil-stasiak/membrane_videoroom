@@ -1,8 +1,8 @@
-import { UseMembraneClientType } from "./hooks/useMembraneClient";
+import { UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
 import { Callbacks } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
 import { useEffect, useMemo, useState } from "react";
 import { Peer } from "@membraneframework/membrane-webrtc-js";
-import { LibraryPeer, LibraryPeersState } from "../../library/types";
+import { LibraryPeer, LibraryPeersState } from "./types";
 
 export const useLibraryPeersState = (clientWrapper: UseMembraneClientType | null): LibraryPeersState | null => {
   const [state, setState] = useState<LibraryPeersState | null>(null);

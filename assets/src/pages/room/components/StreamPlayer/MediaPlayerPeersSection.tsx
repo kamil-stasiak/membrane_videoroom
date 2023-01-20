@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { StreamSource, TrackType } from "../../../types";
 import InfoLayer from "./PeerInfoLayer";
 import PeerInfoLayer from "./PeerInfoLayer";
-import { useTracksState } from "../../useTracksState";
+import { useTracksState } from "../../../../library/useTracksState";
 
 export type TrackWithId = {
   stream?: MediaStream;

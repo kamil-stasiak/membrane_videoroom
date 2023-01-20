@@ -1,5 +1,5 @@
-import { usePeersState } from "./hooks/usePeerState";
-import { UseMembraneClientType } from "./hooks/useMembraneClient";
+import { usePeersState } from "../pages/room/hooks/usePeerState";
+import { UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
 import { Callbacks } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
 import { useEffect, useMemo } from "react";
 

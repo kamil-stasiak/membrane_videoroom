@@ -1,10 +1,14 @@
 import { useEffect } from "react";
-import { PeersApi } from "./usePeerState";
 import { TrackType } from "../../types";
+import { SetLocalTrackId } from "../../../library/useLoclPeerState";
 
-export const useSetRemoteTrackId = (type: TrackType, trackId: string | null, api: PeersApi | null) => {
+export const useSetRemoteTrackId = (type: TrackType, setLocalTrackId: SetLocalTrackId, trackId: string | null) => {
   useEffect(() => {
-    if (!api) return;
-    api.setLocalTrackId(type, trackId);
-  }, [type, api, trackId]);
+    // if(api.tracks[type]?.trackId === trackId) {
+    //   console.log("useSetRemoteTrackId skipped")
+    //   return;
+    // }
+
+    setLocalTrackId(type, trackId);
+  }, [type, setLocalTrackId, trackId]);
 };

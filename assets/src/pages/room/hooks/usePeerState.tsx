@@ -42,9 +42,11 @@ export type Track = {
   metadata?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
-export type Tracks = {
-  [Property in TrackType]?: Track;
-};
+// export type Tracks = {
+//   [Property in TrackType]?: Track;
+// };
+
+export type Tracks = Partial<Record<TrackType, Track>>;
 
 export type LocalPeer = {
   id?: string;

@@ -11,18 +11,19 @@ import { StreamingMode } from "./hooks/useMembraneMediaStreaming";
 import { useAcquireWakeLockAutomatically } from "./hooks/useAcquireWakeLockAutomatically";
 import { TrackContext } from "@membraneframework/membrane-webrtc-js";
 import { isTrackType } from "../types";
-import { useFullState } from "./useFullState";
-import { useClientErrorState } from "./useClientErrorState";
-import { useLibraryPeersState } from "./usePeersState";
+import { useFullState } from "../../library/useFullState";
+import { useClientErrorState } from "../../library/useClientErrorState";
+import { useLibraryPeersState } from "../../library/usePeersState";
 import { LibraryPeer } from "../../library/types";
+import { UseLocalPeersState, useLocalPeerState } from "../../library/useLoclPeerState";
 
 type VideoComponentProps = {
   peerId: string;
   membrane: UseMembraneClientType;
 };
 
-const VideoComponent = ({ peerId }: VideoComponentProps) => {
-  return <div>{peerId}</div>;
+const PeerComponent = ({ peerId }: VideoComponentProps) => {
+  return <div className="text-white">{peerId}</div>;
 };
 
 type Props = {
@@ -41,6 +42,12 @@ export const parseMetadata = (context: TrackContext) => {
   return isTrackType(type) ? { type, active } : { active };
 };
 
+const useLog = (state: any, name: string) => {
+  useEffect(() => {
+    console.log({ name: name, state });
+  }, [state, name]);
+};
+
 const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, autostartStreaming }: Props) => {
   const wakeLock = useAcquireWakeLockAutomatically();
 
@@ -51,26 +58,26 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
   const [showDeveloperInfo, toggleDeveloperInfo] = useToggle(false);
   const [peerMetadata] = useState<PeerMetadata>({ emoji: getRandomAnimalEmoji(), displayName });
 
-  const clientWrapper = useMembraneClient(roomId, peerMetadata, isSimulcastOn, setErrorMessage);
+  const clientWrapper: UseMembraneClientType | null = useMembraneClient(roomId, peerMetadata, isSimulcastOn, setErrorMessage);
 
-  const { state, api } = useFullState(clientWrapper, peerMetadata);
+  // const { state, api } = useFullState(clientWrapper, peerMetadata);
   useClientErrorState(clientWrapper, setErrorMessage);
   const peersState = useLibraryPeersState(clientWrapper);
 
-  useEffect(() => {
-    console.log({ name: "peers", peersState });
-  }, [peersState]);
+  const local: UseLocalPeersState = useLocalPeerState();
+  const isConnected = clientWrapper?.webrtcConnectionStatus === "connected";
 
-  const isConnected = !!state?.local?.id;
+  useLog(peersState, "peerState");
+  useLog(local, "local");
 
   const camera = useStreamManager(
     "camera",
     mode,
     isConnected,
     isSimulcastOn,
-    clientWrapper?.webrtc,
+    clientWrapper,
     VIDEO_TRACKS_CONFIG,
-    api,
+    local,
     autostartStreaming
   );
   const audio = useStreamManager(
@@ -78,9 +85,9 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     mode,
     isConnected,
     isSimulcastOn,
-    clientWrapper?.webrtc,
+    clientWrapper,
     AUDIO_TRACKS_CONFIG,
-    api,
+    local,
     autostartStreaming
   );
   const screenSharing = useStreamManager(
@@ -88,9 +95,9 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     mode,
     isConnected,
     isSimulcastOn,
-    clientWrapper?.webrtc,
+    clientWrapper,
     SCREEN_SHARING_TRACKS_CONFIG,
-    api,
+    local,
     false
   );
 
@@ -124,9 +131,15 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
               ))}
             </h3>
           </header>
-          {clientWrapper && peersState?.list?.map((peer) => (
-            <VideoComponent key={peer.id} membrane={clientWrapper} peerId={peer.id}></VideoComponent>
-          ))}
+          {clientWrapper && <PeerComponent membrane={clientWrapper} peerId={"Local peer"} />}
+          {clientWrapper && (
+            <>
+              {local.id && <PeerComponent membrane={clientWrapper} peerId={"Local peer"} />}
+              {peersState?.list?.map((peer) => (
+                <PeerComponent key={peer.id} membrane={clientWrapper} peerId={peer.id} />
+              ))}
+            </>
+          )}
 
           {/*<VideochatSection*/}
           {/*  clientWrapper={clientWrapper}*/}

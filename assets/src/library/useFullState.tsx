@@ -1,10 +1,10 @@
-import { PeerMetadata, TrackMetadata, usePeersState, UsePeersStateResult } from "./hooks/usePeerState";
-import { UseMembraneClientType } from "./hooks/useMembraneClient";
+import { PeerMetadata, TrackMetadata, usePeersState, UsePeersStateResult } from "../pages/room/hooks/usePeerState";
+import { UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
 import { Callbacks } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
 import { useEffect, useMemo } from "react";
 import { Peer, TrackContext } from "@membraneframework/membrane-webrtc-js";
-import { isTrackEncoding } from "../types";
-import { parseMetadata } from "./RoomPage";
+import { isTrackEncoding } from "../pages/types";
+import { parseMetadata } from "../pages/room/RoomPage";
 
 export const useFullState = (
   clientWrapper: UseMembraneClientType | null,

@@ -1,14 +1,19 @@
 import { useEffect } from "react";
-import { PeersApi } from "./usePeerState";
 import { TrackType } from "../../types";
+import { SetLocalStream } from "../../../library/useLoclPeerState";
 
 export const useSetLocalUserTrack = (
   type: TrackType,
-  api: PeersApi,
+  setLocalStream: SetLocalStream,
   stream: MediaStream | undefined,
   isEnabled: boolean
 ) => {
   useEffect(() => {
-    api.setLocalStream(type, isEnabled, stream);
-  }, [type, api, stream, isEnabled]);
+    // if (api.tracks[type]?.stream === stream) {
+    //   console.log("Skipped");
+    //   return;
+    // }
+
+    setLocalStream(type, isEnabled, stream);
+  }, [type, setLocalStream, stream, isEnabled]);
 };
