@@ -90,16 +90,8 @@ type PeerProp = {
 };
 
 const Peer = ({ config, showDeveloperInfo, showSimulcast, webrtc, clientWrapper }: PeerProp) => {
-  const tracksState = useTracksState(clientWrapper, config.peerId!);
-
-  useEffect(() => {
-    console.log({ name: "tracks", tracksState });
-  }, [tracksState]);
-
   // todo for now only first audio, video and screen sharing stream are handled
-  const video: TrackWithId | undefined = tracksState
-    ? Object.values(tracksState).filter((e) => e?.mediaStreamTrack?.kind === "video")
-    : undefined;
+  const video: TrackWithId | undefined = config.video[0]
   const screenSharing: TrackWithId | undefined = config.screenSharing[0];
   const audio: TrackWithId | undefined = config.audio[0];
 

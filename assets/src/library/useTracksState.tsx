@@ -15,6 +15,7 @@ export const useTracksState = (clientWrapper: UseMembraneClientType | null, peer
     const callbacks: Partial<Callbacks> = {
       onTrackReady: (ctx) => {
         if (!ctx?.peer || !ctx?.track || !ctx?.stream) return;
+        if (peerId !== ctx.peer.id) return;
 
         const newTrack: ApiTrack = {
           mediaStreamTrack: ctx.track,
@@ -28,6 +29,7 @@ export const useTracksState = (clientWrapper: UseMembraneClientType | null, peer
       },
       onTrackAdded: (ctx) => {
         if (!ctx?.peer) return;
+        if (peerId !== ctx.peer.id) return;
 
         const newTrack: ApiTrack = {
           trackId: ctx.trackId,
@@ -40,6 +42,7 @@ export const useTracksState = (clientWrapper: UseMembraneClientType | null, peer
       onTrackRemoved: (ctx) => {
         const peerId = ctx?.peer?.id;
         if (!peerId) return;
+        if (peerId !== ctx.peer.id) return;
 
         setState((prevState) => {
           const newState = { ...prevState };
