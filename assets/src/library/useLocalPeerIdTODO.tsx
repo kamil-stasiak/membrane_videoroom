@@ -7,7 +7,7 @@ import { SetLocalPeer } from "./useLoclPeerState";
 export const useLocalPeerIdTODO = (
   clientWrapper: UseMembraneClientType | null,
   peerMetadata: PeerMetadata,
-  setLocalPeer: SetLocalPeer
+  setLocalPeer: SetLocalPeer<PeerMetadata>
 ) => {
   useEffect(() => {
     if (!clientWrapper) return;

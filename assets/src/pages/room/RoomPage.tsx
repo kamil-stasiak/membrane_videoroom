@@ -2,9 +2,8 @@ import React, { FC, useEffect, useState } from "react";
 import { AUDIO_TRACKS_CONFIG, SCREEN_SHARING_TRACKS_CONFIG, VIDEO_TRACKS_CONFIG } from "./consts";
 import { useMembraneClient, UseMembraneClientType } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
-import { ApiTrack, PeerMetadata, RemotePeer } from "./hooks/usePeerState";
+import { ApiTrack, PeerMetadata } from "./hooks/usePeerState";
 import { useToggle } from "./hooks/useToggle";
-import { VideochatSection } from "./VideochatSection";
 import { getRandomAnimalEmoji } from "./utils";
 import { useStreamManager } from "./hooks/useStreamManager";
 import { StreamingMode } from "./hooks/useMembraneMediaStreaming";
@@ -13,11 +12,10 @@ import { TrackContext } from "@membraneframework/membrane-webrtc-js";
 import { isTrackType } from "../types";
 import { useClientErrorState } from "../../library/useClientErrorState";
 import { useLibraryPeersState } from "../../library/usePeersState";
-import { LibraryPeer } from "../../library/types";
+import { LibraryPeer, LibraryPeersState } from "../../library/types";
 import { UseLocalPeersState, useLocalPeerState } from "../../library/useLoclPeerState";
 import { useLocalPeerIdTODO } from "../../library/useLocalPeerIdTODO";
 import { UseTracksState, useTracksState } from "../../library/useTracksState";
-import { useFullState } from "../../library/useFullState";
 import { useTrackMetadata } from "../../library/useTrackMetadata";
 
 type TrackMetadataComponentProps = {
@@ -109,7 +107,7 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
   const [showDeveloperInfo, toggleDeveloperInfo] = useToggle(false);
   const [peerMetadata] = useState<PeerMetadata>({ emoji: getRandomAnimalEmoji(), displayName });
 
-  const local: UseLocalPeersState = useLocalPeerState();
+  const local: UseLocalPeersState<PeerMetadata> = useLocalPeerState<PeerMetadata>();
   const clientWrapper: UseMembraneClientType | null = useMembraneClient(
     roomId,
     peerMetadata,
@@ -121,7 +119,7 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
   // const { state, api } = useFullState(clientWrapper, peerMetadata);
   useClientErrorState(clientWrapper, setErrorMessage);
 
-  const peersState = useLibraryPeersState(clientWrapper);
+  const peersState: LibraryPeersState | null = useLibraryPeersState(clientWrapper);
   const isConnected = clientWrapper?.webrtcConnectionStatus === "connected";
 
   useLog(peersState, "peerState");
