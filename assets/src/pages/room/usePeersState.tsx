@@ -1,43 +1,42 @@
-import { PeerMetadata, usePeersState, UsePeersStateResult } from "./hooks/usePeerState";
 import { UseMembraneClientType } from "./hooks/useMembraneClient";
 import { Callbacks } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Peer } from "@membraneframework/membrane-webrtc-js";
+import { LibraryPeer, LibraryPeersState } from "../../library/types";
 
-export const usePeersStateNew = (
-  clientWrapper: UseMembraneClientType | null,
-  peerMetadata: PeerMetadata
-): UsePeersStateResult => {
-  const { state, api } = usePeersState();
+export const useLibraryPeersState = (clientWrapper: UseMembraneClientType | null): LibraryPeersState | null => {
+  const [state, setState] = useState<LibraryPeersState | null>(null);
 
   const callbacks: Partial<Callbacks> = useMemo(
     () => ({
       onJoinSuccess: (peerId, peersInRoom: Peer[]) => {
-        api.setLocalPeer(peerId, peerMetadata);
-        api.addPeers(
-          peersInRoom.map((peer) => ({
-            id: peer.id,
-            displayName: peer.metadata.displayName,
-            emoji: peer.metadata.emoji,
-            source: "remote",
-          }))
-        );
+        const map = new Map(peersInRoom.map((peer) => [peer.id, { id: peer.id }]));
+        const record: Record<string, LibraryPeer> = Object.fromEntries(map);
+        const list: ReadonlyArray<LibraryPeer> = Object.values(record);
+        setState({ list, record });
       },
       onPeerJoined: (peer) => {
-        api.addPeers([
-          {
-            id: peer.id,
-            displayName: peer.metadata.displayName,
-            emoji: peer.metadata.emoji,
-            source: "remote",
-          },
-        ]);
+        setState((prevState) => {
+          const prevList: ReadonlyArray<LibraryPeer> = prevState?.list || [];
+          const prevRecord: Record<string, LibraryPeer> = prevState?.record || {};
+          const newPeer: LibraryPeer = { id: peer.id };
+          const newRecord: Record<string, LibraryPeer> = { ...prevRecord, [peer.id]: newPeer };
+          const newList: ReadonlyArray<LibraryPeer> = [...prevList, newPeer];
+
+          return { list: newList, record: newRecord };
+        });
       },
       onPeerLeft: (peer) => {
-        api.removePeer(peer.id);
+        setState((prevState) => {
+          const newList: ReadonlyArray<LibraryPeer> = (prevState?.list || []).filter((p) => peer.id !== p.id);
+          const newRecord: Record<string, LibraryPeer> = prevState?.record || {};
+          delete newRecord[peer.id];
+
+          return { list: newList, record: newRecord };
+        });
       },
     }),
-    [api, peerMetadata]
+    []
   );
 
   useEffect(() => {
@@ -53,5 +52,5 @@ export const usePeersStateNew = (
       clientWrapper.messageEmitter.off("onPeerLeft", callbacks.onPeerLeft);
     };
   }, [callbacks, clientWrapper]);
-  return { state, api };
+  return state;
 };

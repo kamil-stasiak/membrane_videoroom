@@ -1,6 +1,6 @@
 import React, { FC, useEffect, useState } from "react";
 import { AUDIO_TRACKS_CONFIG, SCREEN_SHARING_TRACKS_CONFIG, VIDEO_TRACKS_CONFIG } from "./consts";
-import { useMembraneClient } from "./hooks/useMembraneClient";
+import { useMembraneClient, UseMembraneClientType } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
 import { PeerMetadata, RemotePeer } from "./hooks/usePeerState";
 import { useToggle } from "./hooks/useToggle";
@@ -13,7 +13,17 @@ import { TrackContext } from "@membraneframework/membrane-webrtc-js";
 import { isTrackType } from "../types";
 import { useFullState } from "./useFullState";
 import { useClientErrorState } from "./useClientErrorState";
-import { usePeersStateNew } from "./usePeersState";
+import { useLibraryPeersState } from "./usePeersState";
+import { LibraryPeer } from "../../library/types";
+
+type VideoComponentProps = {
+  peerId: string;
+  membrane: UseMembraneClientType;
+};
+
+const VideoComponent = ({ peerId }: VideoComponentProps) => {
+  return <div>{peerId}</div>;
+};
 
 type Props = {
   displayName: string;
@@ -45,7 +55,7 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
 
   const { state, api } = useFullState(clientWrapper, peerMetadata);
   useClientErrorState(clientWrapper, setErrorMessage);
-  const { state: peersState } = usePeersStateNew(clientWrapper, peerMetadata);
+  const peersState = useLibraryPeersState(clientWrapper);
 
   useEffect(() => {
     console.log({ name: "peers", peersState });
@@ -107,21 +117,25 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
               <span>
                 {peerMetadata.emoji} {peerMetadata.displayName}
               </span>
-              {/*{state.remote.map((peer: RemotePeer) => (*/}
-              {/*  <span key={peer.id} title={peer.id}>*/}
-              {/*    {peer.emoji} {peer.displayName}*/}
-              {/*  </span>*/}
-              {/*))}*/}
+              {peersState?.list.map((peer: LibraryPeer) => (
+                <span key={peer.id} title={peer.id}>
+                  {peer.id}
+                </span>
+              ))}
             </h3>
           </header>
-          <VideochatSection
-            clientWrapper={clientWrapper}
-            peers={peersState.remote}
-            localPeer={peersState.local}
-            showSimulcast={showSimulcastMenu}
-            showDeveloperInfo={showDeveloperInfo}
-            webrtc={clientWrapper?.webrtc}
-          />
+          {clientWrapper && peersState?.list?.map((peer) => (
+            <VideoComponent key={peer.id} membrane={clientWrapper} peerId={peer.id}></VideoComponent>
+          ))}
+
+          {/*<VideochatSection*/}
+          {/*  clientWrapper={clientWrapper}*/}
+          {/*  peers={peersState.remote}*/}
+          {/*  localPeer={peersState.local}*/}
+          {/*  showSimulcast={showSimulcastMenu}*/}
+          {/*  showDeveloperInfo={showDeveloperInfo}*/}
+          {/*  webrtc={clientWrapper?.webrtc}*/}
+          {/*/>*/}
         </section>
       </div>
       <MediaControlButtons

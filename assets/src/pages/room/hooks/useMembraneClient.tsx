@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { MembraneWebRTC, Peer, SerializedMediaEvent, TrackContext } from "@membraneframework/membrane-webrtc-js";
-import { Socket } from "phoenix";
+import { Channel, Socket } from "phoenix";
 import { PeerMetadata } from "./usePeerState";
 import { SetErrorMessage } from "../RoomPage";
 import { Callbacks, TrackEncoding } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
-import EventEmitter from "events"
-import TypedEmitter from "typed-emitter"
+import EventEmitter from "events";
+import TypedEmitter from "typed-emitter";
 
 type UseSetupResult = {
   webrtc?: MembraneWebRTC;
@@ -14,6 +14,7 @@ type UseSetupResult = {
 export type UseMembraneClientType = {
   webrtc: MembraneWebRTC;
   messageEmitter: TypedEmitter<Partial<Callbacks>>;
+  signaling: Channel;
 };
 
 // todo extract callbacks
@@ -21,7 +22,7 @@ export const useMembraneClient = (
   roomId: string,
   peerMetadata: PeerMetadata,
   isSimulcastOn: boolean,
-  setErrorMessage: SetErrorMessage
+  setErrorMessage: SetErrorMessage,
 ): UseMembraneClientType | null => {
   const [webrtc, setWebrtc] = useState<UseMembraneClientType | null>(null);
 
@@ -33,23 +34,23 @@ export const useMembraneClient = (
     const socketOnCloseRef = socket.onClose(() => cleanUp());
     const socketOnErrorRef = socket.onError(() => cleanUp());
 
-    const webrtcChannel = socket.channel(`room:${roomId}`, {
+    const signaling: Channel = socket.channel(`room:${roomId}`, {
       isSimulcastOn: isSimulcastOn,
     });
 
-    webrtcChannel.onError((reason) => {
+    signaling.onError((reason) => {
       console.error("WebrtcChannel error occurred");
       console.error(reason);
       setErrorMessage("WebrtcChannel error occurred");
     });
-    webrtcChannel.onClose(() => {
+    signaling.onClose(() => {
       return;
     });
 
     const webrtc = new MembraneWebRTC({
       callbacks: {
         onSendMediaEvent: (mediaEvent: SerializedMediaEvent) => {
-          webrtcChannel.push("mediaEvent", { data: mediaEvent });
+          signaling.push("mediaEvent", { data: mediaEvent });
           messageEmitter.emit("onSendMediaEvent", mediaEvent);
         },
         onConnectionError: (message) => {
@@ -95,19 +96,19 @@ export const useMembraneClient = (
       },
     });
 
-    webrtcChannel.on("mediaEvent", (event) => {
+    signaling.on("mediaEvent", (event) => {
       webrtc.receiveMediaEvent(event.data);
     });
 
-    webrtcChannel.on("simulcastConfig", () => {
+    signaling.on("simulcastConfig", () => {
       return;
     });
 
-    webrtcChannel
+    signaling
       .join()
       .receive("ok", () => {
         webrtc.join(peerMetadata);
-        setWebrtc({ webrtc, messageEmitter });
+        setWebrtc({ webrtc, messageEmitter, signaling });
       })
       .receive("error", (response) => {
         setErrorMessage("Connecting error");
@@ -117,7 +118,7 @@ export const useMembraneClient = (
 
     const cleanUp = () => {
       webrtc.leave();
-      webrtcChannel.leave();
+      signaling.leave();
       socket.off([socketOnCloseRef, socketOnErrorRef]);
       setWebrtc(null);
     };
