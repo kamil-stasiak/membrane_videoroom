@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useEffect, useState, useSyncExternalStore } from "react";
 import { AUDIO_TRACKS_CONFIG, SCREEN_SHARING_TRACKS_CONFIG, VIDEO_TRACKS_CONFIG } from "./consts";
 import { useMembraneClient, UseMembraneClientType } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
@@ -97,6 +97,37 @@ const useLog = (state: any, name: string) => {
   }, [state, name]);
 };
 
+const subscribers: Array<() => void> = [];
+
+// function subscribe(callback) {
+//   window.addEventListener('online', callback);
+//   window.addEventListener('offline', callback);
+//   return () => {
+//     window.removeEventListener('online', callback);
+//     window.removeEventListener('offline', callback);
+//   };
+// }
+
+// const subscribe = (callback: () => void) => {
+//   // console.log("subscribe");
+//   //
+//   // subscribers.push(callback);
+//
+//   return () => {
+//     // console.log("unsubscribe");
+//   };
+// };
+
+// const getSnapshot = () => {
+//   console.log("getSnapshot");
+//   return "OK";
+// };
+//
+function getSnapshot() {
+  console.log("SNAPSHOT!")
+  return navigator.onLine;
+}
+
 const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, autostartStreaming }: Props) => {
   const wakeLock = useAcquireWakeLockAutomatically();
 
@@ -116,14 +147,18 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
   );
   useLocalPeerIdTODO(clientWrapper, peerMetadata, local.setLocalPeer);
 
+  // useSyncExternalStore(subscribe, getSnapshot);
+
+  // const isOnline = useSyncExternalStore(subscribe, getSnapshot);
+
   // const { state, api } = useFullState(clientWrapper, peerMetadata);
   useClientErrorState(clientWrapper, setErrorMessage);
 
   const peersState: LibraryPeersState | null = useLibraryPeersState(clientWrapper);
   const isConnected = clientWrapper?.webrtcConnectionStatus === "connected";
 
-  useLog(peersState, "peerState");
-  useLog(local, "local");
+  // useLog(peersState, "peerState");
+  // useLog(local, "local");
   // useLog(state, "fullState");
 
   const camera = useStreamManager(
@@ -161,6 +196,15 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     <section>
       <div className="flex flex-col h-screen relative">
         {errorMessage && <div className="bg-red-700 text-white p-1 w-full">{errorMessage}</div>}
+        <button
+          onClick={() =>
+            subscribers.forEach((call) => {
+              call();
+            })
+          }
+        >
+          Click
+        </button>
 
         {showDeveloperInfo && (
           <div className="absolute text-white text-shadow-lg right-0 top-0 p-2 flex flex-col text-right">

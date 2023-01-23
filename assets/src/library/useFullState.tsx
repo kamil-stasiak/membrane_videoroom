@@ -1,7 +1,7 @@
 import { PeerMetadata, TrackMetadata, usePeersState, UsePeersStateResult } from "../pages/room/hooks/usePeerState";
 import { UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
 import { Callbacks } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Peer, TrackContext } from "@membraneframework/membrane-webrtc-js";
 import { isTrackEncoding } from "../pages/types";
 import { parseMetadata } from "../pages/room/RoomPage";

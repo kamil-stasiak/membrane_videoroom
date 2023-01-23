@@ -18,7 +18,9 @@ export const useLocalPeerIdTODO = (
       },
     };
 
-    clientWrapper.messageEmitter.on("onJoinSuccess", callbacks.onJoinSuccess);
+    setTimeout(() => {
+      clientWrapper.messageEmitter.on("onJoinSuccess", callbacks.onJoinSuccess);
+    }, 5000);
 
     return () => {
       clientWrapper.messageEmitter.off("onJoinSuccess", callbacks.onJoinSuccess);

@@ -118,6 +118,7 @@ export const useMembraneClient = (
       return;
     });
 
+
     setState({
       webrtc,
       messageEmitter,

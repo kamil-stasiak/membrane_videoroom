@@ -44,7 +44,7 @@ export const useMembraneMediaStreaming = (
         track,
         stream,
         defaultTrackMetadata,
-        type == "camera" && simulcast ? { enabled: true, active_encodings: ["l", "m", "h"] } : undefined,
+        type === "camera" && simulcast ? { enabled: true, active_encodings: ["l", "m", "h"] } : undefined,
         selectBandwidthLimit(type, simulcast)
       );
 
