@@ -105,6 +105,18 @@
   "resolved" "https://registry.npmjs.org/@types/json-schema/-/json-schema-7.0.11.tgz"
   "version" "7.0.11"
 
+"@types/lodash.groupby@^4.6.7":
+  "integrity" "sha512-dFUR1pqdMgjIBbgPJ/8axJX6M1C7zsL+HF4qdYMQeJ7XOp0Qbf37I3zh9gpXr/ks6tgEYPDRqyZRAnFYvewYHQ=="
+  "resolved" "https://registry.npmjs.org/@types/lodash.groupby/-/lodash.groupby-4.6.7.tgz"
+  "version" "4.6.7"
+  dependencies:
+    "@types/lodash" "*"
+
+"@types/lodash@*":
+  "integrity" "sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ=="
+  "resolved" "https://registry.npmjs.org/@types/lodash/-/lodash-4.14.191.tgz"
+  "version" "4.14.191"
+
 "@types/node@*":
   "integrity" "sha512-juG3RWMBOqcOuXC643OAdSA525V44cVgGV6dUDuiFtss+8Fk5x1hI93Rsld43VeJVIeqlP9I7Fn9/qaVqoEAuQ=="
   "resolved" "https://registry.npmjs.org/@types/node/-/node-18.11.10.tgz"
@@ -1433,6 +1445,16 @@
   "version" "6.0.0"
   dependencies:
     "p-locate" "^5.0.0"
+
+"lodash.groupby@^4.6.0":
+  "integrity" "sha512-5dcWxm23+VAoz+awKmBaiBvzox8+RqMgFhi7UvX9DHZr2HdxHXM/Wrf8cfKpsW37RNrvtPn6hSwNqurSILbmJw=="
+  "resolved" "https://registry.npmjs.org/lodash.groupby/-/lodash.groupby-4.6.0.tgz"
+  "version" "4.6.0"
+
+"lodash.isequal@^4.5.0":
+  "integrity" "sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ=="
+  "resolved" "https://registry.npmjs.org/lodash.isequal/-/lodash.isequal-4.5.0.tgz"
+  "version" "4.5.0"
 
 "lodash.merge@^4.6.2":
   "integrity" "sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ=="

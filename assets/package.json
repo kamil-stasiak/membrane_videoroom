@@ -10,6 +10,8 @@
     "@membraneframework/membrane-webrtc-js": "^0.3.1",
     "clsx": "^1.2.1",
     "events": "^3.3.0",
+    "lodash.groupby": "^4.6.0",
+    "lodash.isequal": "^4.5.0",
     "phoenix": "file:../deps/phoenix",
     "phoenix_html": "file:../deps/phoenix_html",
     "query-string": "^7.0.0",
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@tailwindcss/aspect-ratio": "^0.3.0",
     "@types/dom-screen-wake-lock": "^1.0.0",
+    "@types/lodash.groupby": "^4.6.7",
     "@types/phoenix": "^1.5.4",
     "@types/react": "^18.0.21",
     "@types/react-dom": "^18.0.6",

@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState, useSyncExternalStore } from "react";
+import React, { FC, useEffect, useState } from "react";
 import { AUDIO_TRACKS_CONFIG, SCREEN_SHARING_TRACKS_CONFIG, VIDEO_TRACKS_CONFIG } from "./consts";
 import { useMembraneClient, UseMembraneClientType } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
@@ -17,6 +17,7 @@ import { UseLocalPeersState, useLocalPeerState } from "../../library/useLoclPeer
 import { useLocalPeerIdTODO } from "../../library/useLocalPeerIdTODO";
 import { UseTracksState, useTracksState } from "../../library/useTracksState";
 import { useTrackMetadata } from "../../library/useTrackMetadata";
+import { useFullState2 } from "./UseFullState2";
 
 type TrackMetadataComponentProps = {
   trackId: string;
@@ -91,12 +92,6 @@ export const parseMetadata = (context: TrackContext) => {
   return isTrackType(type) ? { type, active } : { active };
 };
 
-const useLog = (state: any, name: string) => {
-  useEffect(() => {
-    console.log({ name: name, state });
-  }, [state, name]);
-};
-
 const subscribers: Array<() => void> = [];
 
 // function subscribe(callback) {
@@ -124,7 +119,7 @@ const subscribers: Array<() => void> = [];
 // };
 //
 function getSnapshot() {
-  console.log("SNAPSHOT!")
+  console.log("SNAPSHOT!");
   return navigator.onLine;
 }
 
@@ -146,6 +141,8 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
     setErrorMessage
   );
   useLocalPeerIdTODO(clientWrapper, peerMetadata, local.setLocalPeer);
+
+  useFullState2(clientWrapper);
 
   // useSyncExternalStore(subscribe, getSnapshot);
 
@@ -279,6 +276,6 @@ const RoomPage: FC<Props> = ({ roomId, displayName, isSimulcastOn, manualMode, a
       </div>
     </section>
   );
-};
+};;
 
 export default RoomPage;
