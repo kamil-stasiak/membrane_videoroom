@@ -4,12 +4,11 @@ import { LibraryPeersState } from "./types";
 import { cache } from "./usePeersState2";
 import { useLog } from "../pages/room/UseLog";
 
-export const useSelector = (
+export const useSelector = <Result,>(
   clientWrapper: UseMembraneClientType | null,
-  selector: (snapshot: (LibraryPeersState | null)) => Array<string>
-): Array<string> => {
-  const fn: (snapshot: LibraryPeersState | null) => Array<string> =
-    useMemo(() => cache(selector), [selector]);
+  selector: (snapshot: LibraryPeersState | null) => Result
+): Result => {
+  const fn: (snapshot: LibraryPeersState | null) => Result = useMemo(() => cache(selector), [selector]);
 
   const subscribe: (onStoreChange: () => void) => () => void = useCallback(
     (listener: Listener) => {
@@ -30,7 +29,7 @@ export const useSelector = (
     return fn(clientWrapper?.store?.getSnapshot() || null);
   }, [clientWrapper, fn]);
 
-  const fullState: Array<string> = useSyncExternalStore(subscribe, getSnapshotWithSelector);
+  const fullState: Result = useSyncExternalStore(subscribe, getSnapshotWithSelector);
 
   useLog(fullState, "useSelector");
 

@@ -30,7 +30,7 @@ const selectPeersIds = (snapshot: LibraryPeersState | null, peerId: string): Arr
   return newTracks;
 };
 
-const selectPeersIds2 = (peerId: string): (snapshot: (LibraryPeersState | null)) => (Array<Track3>) => {
+export const selectPeersIds2 = (peerId: string): (snapshot: (LibraryPeersState | null)) => (Array<Track3>) => {
   return (snapshot: LibraryPeersState | null): Array<Track3> => {
     if (!snapshot?.remote) return [];
     const newTracks: Array<Track3> = Object.values(snapshot?.remote[peerId]?.tracks || {}).map((track) => ({
@@ -67,8 +67,9 @@ export const cache3 = <T,>(
 };
 
 export const useTracksState2 = (clientWrapper: UseMembraneClientType | null, peerId: string): Array<Track3> => {
+  const callbackFunction: (snapshot: (LibraryPeersState | null)) => Array<Track3> = selectPeersIds2(peerId);
   const fn: (snapshot: LibraryPeersState | null) => Array<Track3> = useMemo(
-    () => cache(selectPeersIds2(peerId)),
+    () => cache(callbackFunction),
     [peerId]
   );
 

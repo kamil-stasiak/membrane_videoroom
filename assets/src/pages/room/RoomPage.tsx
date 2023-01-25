@@ -18,7 +18,7 @@ import { UseTracksState, useTracksState } from "../../library/useTracksState";
 import { useTrackMetadata } from "../../library/useTrackMetadata";
 import { selectPeersIds, useLibraryPeersState2 } from "../../library/usePeersState2";
 import { useFullState2 } from "./UseFullState2";
-import { Track3, useTracksState2 } from "../../library/useTracksState2";
+import { selectPeersIds2, Track3, useTracksState2 } from "../../library/useTracksState2";
 import { useLog } from "./UseLog";
 import { useWhyDidYouUpdate } from "../../library/whyDidYouRender";
 import { useTrackMetadata2 } from "../../library/useTrackMetadata2";
@@ -69,7 +69,7 @@ type VideoComponentProps = {
 
 const RemotePeerComponent = ({ peerId, membrane }: VideoComponentProps) => {
   // const tracksState: Array<Track3> = useTracksState2(membrane, peerId);
-  const tracksState: Array<Track3> = useSelector<Array<Track3>>(membrane, peerId);
+  const tracksState: Array<Track3> = useSelector<Array<Track3>>(membrane, selectPeersIds2(peerId));
 
   // useEffect(() => {
   //   console.log({ name: "tracks", tracksState });
