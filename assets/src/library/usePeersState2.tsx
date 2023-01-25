@@ -1,7 +1,6 @@
 import { Listener, UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { LibraryPeersState, LibraryRemotePeer } from "./types";
-import { useFullState2 } from "../pages/room/UseFullState2";
 import isEqual from "lodash.isequal";
 import { useLog } from "../pages/room/UseLog";
 
@@ -14,20 +13,24 @@ const groupBy = <IN,>(arr: Array<IN>, criteria: (it: IN) => string): Record<stri
     return acc;
   }, {} as Record<string, Array<IN>>);
 
-const emptyArray = [];
+const emptyArray: string[] = [];
 
-const cache = (callbackFunction: () => string[]): (() => string[]) => {
-  console.log("Outer cache function");
+const cache: (
+  callbackFunction: (snapshot: LibraryPeersState | null) => string[]
+) => (snapshot: LibraryPeersState | null) => string[] = (
+  callbackFunction: (snapshot: LibraryPeersState | null) => string[]
+): ((snapshot: LibraryPeersState | null) => string[]) => {
+  console.log("%c Create cache", "color: orange");
   let cache: any = undefined;
 
-  return () => {
-    const result = callbackFunction();
+  return (innerSnapshot) => {
+    const result = callbackFunction(innerSnapshot);
 
     if (isEqual(cache, result)) {
-      console.log("Return cache");
+      console.log("%c Return cache", "color: green");
       return cache;
     }
-    console.log("Return new");
+    console.log("%c Return new", "color: red");
 
     cache = result;
 
@@ -39,6 +42,13 @@ const cache = (callbackFunction: () => string[]): (() => string[]) => {
 //   console.log("Inner cached function");
 //   return ["A", "B"];
 // });
+
+const selectPeersIds = (snapshot: LibraryPeersState | null): string[] => {
+  const remotePeers: Record<string, LibraryRemotePeer> = snapshot?.remote || {};
+  return Object.keys(remotePeers);
+};
+
+const cachedSelectPeersIds: (snapshot: LibraryPeersState | null) => string[] = cache(selectPeersIds);
 
 export const useLibraryPeersState2 = (clientWrapper: UseMembraneClientType | null): Array<string> => {
   // const fullState: LibraryPeersState | undefined = useFullState2(clientWrapper);
@@ -80,17 +90,10 @@ export const useLibraryPeersState2 = (clientWrapper: UseMembraneClientType | nul
   // }, [clientWrapper]);
   //
 
-  const selector: () => string[] = useCallback(
-    cache(() => {
-      console.log("Inner cached function");
-      const remotePeers: Record<string, LibraryRemotePeer> = clientWrapper?.store?.getSnapshot()?.remote || {};
-      const currentIds: string[] = Object.keys(remotePeers);
-      return currentIds;
-    }),
+  const getSnapshotWithSelector = useCallback(
+    () => cachedSelectPeersIds(clientWrapper?.store?.getSnapshot() || null),
     [clientWrapper]
   );
-
-  const getSnapshotWithSelector = useCallback(() => selector(), [selector]);
 
   const fullState: string[] = useSyncExternalStore(subscribe, getSnapshotWithSelector);
 
