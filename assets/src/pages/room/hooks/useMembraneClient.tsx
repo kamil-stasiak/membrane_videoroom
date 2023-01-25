@@ -35,10 +35,6 @@ const createStore = (): Store => {
   let listeners: Listener[] = [];
   let store: LibraryPeersState = { local: { id: null, tracks: {}, metadata: null }, remote: {} };
 
-  setInterval(() => {
-    console.log({ name: "Store", store });
-  }, 3000);
-
   const getSnapshot = (): LibraryPeersState => {
     return store;
   };

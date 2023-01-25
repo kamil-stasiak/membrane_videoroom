@@ -30,6 +30,21 @@ const selectPeersIds = (snapshot: LibraryPeersState | null, peerId: string): Arr
   return newTracks;
 };
 
+const selectPeersIds2 = (peerId: string): (snapshot: (LibraryPeersState | null)) => (Array<Track3>) => {
+  return (snapshot: LibraryPeersState | null): Array<Track3> => {
+    if (!snapshot?.remote) return [];
+    const newTracks: Array<Track3> = Object.values(snapshot?.remote[peerId]?.tracks || {}).map((track) => ({
+      trackId: track.trackId,
+      encoding: track.encoding,
+      stream: track.stream,
+      track: track.track,
+    }));
+
+    return newTracks;
+  }
+};
+
+
 export const cache3 = <T,>(
   callbackFunction: (snapshot: LibraryPeersState | null, peerId: string) => T
 ): ((snapshot: LibraryPeersState | null, peerId: string) => T) => {
@@ -52,9 +67,9 @@ export const cache3 = <T,>(
 };
 
 export const useTracksState2 = (clientWrapper: UseMembraneClientType | null, peerId: string): Array<Track3> => {
-  const fn: (snapshot: LibraryPeersState | null, peerId: string) => Array<Track3> = useMemo(
-    () => cache3(selectPeersIds),
-    []
+  const fn: (snapshot: LibraryPeersState | null) => Array<Track3> = useMemo(
+    () => cache(selectPeersIds2(peerId)),
+    [peerId]
   );
 
   const subscribe: (onStoreChange: () => void) => () => void = useCallback(
@@ -73,46 +88,12 @@ export const useTracksState2 = (clientWrapper: UseMembraneClientType | null, pee
   );
 
   const getSnapshotWithSelector = useCallback(() => {
-    return fn(clientWrapper?.store?.getSnapshot() || null, peerId);
-  }, [fn, clientWrapper, peerId]);
+    return fn(clientWrapper?.store?.getSnapshot() || null);
+  }, [clientWrapper, fn]);
 
   const fullState: Track3[] = useSyncExternalStore(subscribe, getSnapshotWithSelector);
 
   useLog(fullState, "useTracksState2");
 
-
-
-  const a: () => string = useCallback(() => {
-    return ""
-  }, [])
-
-  const b: string = useMemo(() => {
-    return ""
-  }, [])
-
   return fullState;
-
-  // const fullState: LibraryPeersState | undefined = useFullState2(clientWrapper);
-  // const [state, setState] = useState<Array<Track3>>([]);
-  //
-  // useEffect(() => {
-  //   if (!fullState) return;
-  //
-  //   const newTracks: Array<Track3> = Object.values(fullState.remote[peerId].tracks).map((track) => ({
-  //     trackId: track.trackId,
-  //     encoding: track.encoding,
-  //     stream: track.stream,
-  //   }));
-  //
-  //   setState((prevState) => {
-  //     if (isEqual(prevState, newTracks)) {
-  //       return prevState;
-  //     }
-  //     return newTracks;
-  //   });
-  // }, [fullState, peerId]);
-  //
-  // useLog(state, "useTracksState2");
-  //
-  // return state;
 };

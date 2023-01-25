@@ -16,19 +16,22 @@ import { UseLocalPeersState, useLocalPeerState } from "../../library/useLoclPeer
 import { useLocalPeerIdTODO } from "../../library/useLocalPeerIdTODO";
 import { UseTracksState, useTracksState } from "../../library/useTracksState";
 import { useTrackMetadata } from "../../library/useTrackMetadata";
-import { useLibraryPeersState2 } from "../../library/usePeersState2";
+import { selectPeersIds, useLibraryPeersState2 } from "../../library/usePeersState2";
 import { useFullState2 } from "./UseFullState2";
 import { Track3, useTracksState2 } from "../../library/useTracksState2";
 import { useLog } from "./UseLog";
 import { useWhyDidYouUpdate } from "../../library/whyDidYouRender";
+import { useTrackMetadata2 } from "../../library/useTrackMetadata2";
+import { useSelector } from "../../library/useSelector";
 
 type TrackMetadataComponentProps = {
+  peerId: string;
   trackId: string;
   membrane: UseMembraneClientType;
 };
 
-const TrackMetadataComponent = ({ trackId, membrane }: TrackMetadataComponentProps) => {
-  const metadata = useTrackMetadata(membrane, trackId);
+const TrackMetadataComponent = ({ peerId, trackId, membrane }: TrackMetadataComponentProps) => {
+  const metadata = useTrackMetadata2(membrane, peerId, trackId);
 
   return (
     <div className="border-dashed border-2 border-indigo-600">
@@ -42,17 +45,19 @@ const TrackMetadataComponent = ({ trackId, membrane }: TrackMetadataComponentPro
 };
 
 type RemoteTrackComponentProps = {
+  // remove peerId
+  peerId: string;
   track: Track3;
   membrane: UseMembraneClientType;
 };
 
-const RemoteTrackComponent = ({ track, membrane }: RemoteTrackComponentProps) => {
+const RemoteTrackComponent = ({ track, membrane, peerId }: RemoteTrackComponentProps) => {
   return (
     <div>
       <h2>
         {track.track?.kind} - {track.trackId}
       </h2>
-      {/*<TrackMetadataComponent trackId={track.trackId} membrane={membrane} />*/}
+      <TrackMetadataComponent trackId={track.trackId} membrane={membrane} peerId={peerId} />
     </div>
   );
 };
@@ -63,7 +68,8 @@ type VideoComponentProps = {
 };
 
 const RemotePeerComponent = ({ peerId, membrane }: VideoComponentProps) => {
-  const tracksState = useTracksState2(membrane, peerId);
+  // const tracksState: Array<Track3> = useTracksState2(membrane, peerId);
+  const tracksState: Array<Track3> = useSelector<Array<Track3>>(membrane, peerId);
 
   // useEffect(() => {
   //   console.log({ name: "tracks", tracksState });
@@ -72,9 +78,9 @@ const RemotePeerComponent = ({ peerId, membrane }: VideoComponentProps) => {
   return (
     <div className="text-white border-dashed border-2 border-indigo-600">
       <h1>{peerId}</h1>
-      {/*{tracksState.map((track) => (*/}
-      {/*  <RemoteTrackComponent key={track?.trackId} track={track} membrane={membrane} />*/}
-      {/*))}*/}
+      {tracksState.map((track) => (
+        <RemoteTrackComponent key={track?.trackId} track={track} membrane={membrane} peerId={peerId} />
+      ))}
     </div>
   );
 };
@@ -142,8 +148,8 @@ const RoomPage: FC<Props> = (props: Props) => {
   );
   // useLocalPeerIdTODO(clientWrapper, peerMetadata, local.setLocalPeer);
 
-  const remotePeers = useLibraryPeersState2(clientWrapper);
-  // useWhyDidYouUpdate("RoomPage", props);
+  // const remotePeers: Array<string> = useLibraryPeersState2(clientWrapper);
+  const remotePeers: Array<string> = useSelector(clientWrapper, selectPeersIds);
 
   // useFullState2(clientWrapper);
 

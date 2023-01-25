@@ -1,5 +1,5 @@
 import { Listener, UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { LibraryPeersState, LibraryRemotePeer } from "./types";
 import isEqual from "lodash.isequal";
 import { useLog } from "../pages/room/UseLog";
@@ -36,17 +36,10 @@ export const cache = <T,>(
   };
 };
 
-// const cachedFunction: () => string[] = cache(() => {
-//   console.log("Inner cached function");
-//   return ["A", "B"];
-// });
-
-const selectPeersIds = (snapshot: LibraryPeersState | null): string[] => {
+export const selectPeersIds: (snapshot: (LibraryPeersState | null)) => Array<string> = (snapshot: LibraryPeersState | null): Array<string> => {
   const remotePeers: Record<string, LibraryRemotePeer> = snapshot?.remote || {};
   return Object.keys(remotePeers);
 };
-
-const cachedSelectPeersIds: (snapshot: LibraryPeersState | null) => string[] = cache(selectPeersIds);
 
 export const useLibraryPeersState2 = (clientWrapper: UseMembraneClientType | null): Array<string> => {
   const subscribe: (onStoreChange: () => void) => () => void = useCallback(
@@ -64,9 +57,14 @@ export const useLibraryPeersState2 = (clientWrapper: UseMembraneClientType | nul
     [clientWrapper]
   );
 
+  const cachedSelectPeersIds: (snapshot: LibraryPeersState | null) => string[] = useMemo(
+    () => cache(selectPeersIds),
+    []
+  );
+
   const getSnapshotWithSelector = useCallback(
     () => cachedSelectPeersIds(clientWrapper?.store?.getSnapshot() || null),
-    [clientWrapper]
+    [cachedSelectPeersIds, clientWrapper]
   );
 
   const fullState: string[] = useSyncExternalStore(subscribe, getSnapshotWithSelector);
