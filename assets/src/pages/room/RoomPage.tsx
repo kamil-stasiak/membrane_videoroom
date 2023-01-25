@@ -9,10 +9,16 @@ import { useStreamManager } from "./hooks/useStreamManager";
 import { StreamingMode } from "./hooks/useMembraneMediaStreaming";
 import { useAcquireWakeLockAutomatically } from "./hooks/useAcquireWakeLockAutomatically";
 import { useClientErrorState } from "../../library/useClientErrorState";
-import { LibraryTrackMinimal } from "../../library/types";
+import { LibraryTrackMinimal, PeerId } from "../../library/types";
 import { UseLocalPeersState, useLocalPeerState } from "../../library/useLoclPeerState";
 import { useSelector } from "../../library/useSelector";
-import { createPeerIdsSelector, createTracksSelector, selectTrackMetadata } from "../../library/selectors";
+import {
+  createPeerIdsSelector,
+  createTracksIdsSelector,
+  createTracksSelector,
+  selectTrackMetadata,
+} from "../../library/selectors";
+import { createPeerGuiSelector, PeerGui } from "../../library/customSelectors";
 
 type TrackMetadataComponentProps = {
   peerId: string;
@@ -37,17 +43,15 @@ const TrackMetadataComponent = ({ peerId, trackId, membrane }: TrackMetadataComp
 type RemoteTrackComponentProps = {
   // remove peerId
   peerId: string;
-  track: LibraryTrackMinimal;
+  trackId: string;
   membrane: UseMembraneClientType;
 };
 
-const RemoteTrackComponent = ({ track, membrane, peerId }: RemoteTrackComponentProps) => {
+const RemoteTrackComponent = ({ trackId, membrane, peerId }: RemoteTrackComponentProps) => {
   return (
     <div>
-      <h2>
-        {track.track?.kind} - {track.trackId}
-      </h2>
-      <TrackMetadataComponent trackId={track.trackId} membrane={membrane} peerId={peerId} />
+      <h2>{trackId}</h2>
+      <TrackMetadataComponent trackId={trackId} membrane={membrane} peerId={peerId} />
     </div>
   );
 };
@@ -58,13 +62,13 @@ type VideoComponentProps = {
 };
 
 const RemotePeerComponent = ({ peerId, membrane }: VideoComponentProps) => {
-  const tracksState: Array<LibraryTrackMinimal> = useSelector(membrane, createTracksSelector(peerId));
+  const tracksState: Array<string> = useSelector(membrane, createTracksIdsSelector(peerId));
 
   return (
     <div className="text-white border-dashed border-2 border-indigo-600">
       <h1>{peerId}</h1>
-      {tracksState.map((track) => (
-        <RemoteTrackComponent key={track?.trackId} track={track} membrane={membrane} peerId={peerId} />
+      {tracksState.map((trackId) => (
+        <RemoteTrackComponent key={trackId} trackId={trackId} membrane={membrane} peerId={peerId} />
       ))}
     </div>
   );
@@ -100,19 +104,8 @@ const RoomPage: FC<Props> = (props: Props) => {
   );
   // useLocalPeerIdTODO(clientWrapper, peerMetadata, local.setLocalPeer);
 
-  // const remotePeers: Array<string> = useLibraryPeersState2(clientWrapper);
-  const remotePeers: Array<string> = useSelector(clientWrapper, createPeerIdsSelector);
-
-  // useFullState2(clientWrapper);
-
-  // useSyncExternalStore(subscribe, getSnapshot);
-
-  // const isOnline = useSyncExternalStore(subscribe, getSnapshot);
-
-  // const { state, api } = useFullState(clientWrapper, peerMetadata);
+  const remotePeers: Array<PeerGui> = useSelector(clientWrapper, createPeerGuiSelector());
   useClientErrorState(clientWrapper, setErrorMessage);
-
-  // const peersState: LibraryPeersState | null = useLibraryPeersState2(clientWrapper);
   const isConnected = clientWrapper?.webrtcConnectionStatus === "connected";
 
   const camera = useStreamManager(
@@ -168,18 +161,19 @@ const RoomPage: FC<Props> = (props: Props) => {
               <span>
                 {peerMetadata.emoji} {peerMetadata.displayName}
               </span>
-              {/*{remotePeers.map((peerId) => (*/}
-              {/*  <span key={peerId} title={peerId}>*/}
-              {/*    {peerId}*/}
-              {/*  </span>*/}
-              {/*))}*/}
+              {remotePeers.map((peer) => (
+                <span key={peer.id} title={peer.id}>
+                  ({peer.emoji}
+                  {peer.name})
+                </span>
+              ))}
             </h3>
           </header>
           {clientWrapper && (
             <>
               {local.id && <div className="text-white">{local.id}</div>}
-              {remotePeers.map((peerId) => (
-                <RemotePeerComponent key={peerId} membrane={clientWrapper} peerId={peerId} />
+              {remotePeers.map((peer) => (
+                <RemotePeerComponent key={peer.id} membrane={clientWrapper} peerId={peer.id} />
               ))}
             </>
           )}

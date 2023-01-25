@@ -1,26 +1,30 @@
-import { LibraryPeersState, Selector, LibraryTrackMinimal } from "./types";
+import type { LibraryPeersState, Selector, LibraryTrackMinimal, PeerId, TrackId } from "./types";
 
-type SelectTrackMetadata = (peerId: string, trackId: string) => Selector<object>;
-export const selectTrackMetadata: SelectTrackMetadata = (peerId: string, trackId: string): Selector<object> => {
-  return (snapshot: LibraryPeersState | null): object => {
-    if (!snapshot?.remote) return [];
-    return snapshot?.remote[peerId]?.tracks[trackId]?.metadata;
-  };
-};
+type CreatePeerIdsSelector = () => Selector<Array<PeerId>>;
+export const createPeerIdsSelector: CreatePeerIdsSelector =
+  (): Selector<Array<PeerId>> =>
+  (snapshot: LibraryPeersState | null): Array<PeerId> =>
+    Object.keys(snapshot?.remote || {});
 
-type CreateTracksSelector = (peerId: string) => Selector<Array<LibraryTrackMinimal>>;
+type CreateTracksIdsSelector = (peerId: PeerId) => Selector<Array<TrackId>>;
+export const createTracksIdsSelector: CreateTracksIdsSelector =
+  (peerId: string): Selector<Array<PeerId>> =>
+  (snapshot: LibraryPeersState | null): Array<TrackId> =>
+    Object.values(snapshot?.remote[peerId]?.tracks || {}).map((track) => track.trackId);
 
-export const createTracksSelector: CreateTracksSelector = (peerId: string): Selector<Array<LibraryTrackMinimal>> => {
-  return (snapshot: LibraryPeersState | null): Array<LibraryTrackMinimal> => {
-    if (!snapshot?.remote) return [];
-    return Object.values(snapshot?.remote[peerId]?.tracks || {}).map((track) => ({
+type CreateTracksSelector = (peerId: PeerId) => Selector<Array<LibraryTrackMinimal>>;
+export const createTracksSelector: CreateTracksSelector =
+  (peerId: PeerId): Selector<Array<LibraryTrackMinimal>> =>
+  (snapshot: LibraryPeersState | null): Array<LibraryTrackMinimal> =>
+    Object.values(snapshot?.remote[peerId]?.tracks || {}).map((track) => ({
       trackId: track.trackId,
       encoding: track.encoding,
       stream: track.stream,
       track: track.track,
     }));
-  };
-};
 
-export const createPeerIdsSelector: Selector<Array<string>> = (snapshot: LibraryPeersState | null): Array<string> =>
-  Object.keys(snapshot?.remote || {});
+type SelectTrackMetadata = (peerId: PeerId, trackId: TrackId) => Selector<object>;
+export const selectTrackMetadata: SelectTrackMetadata =
+  (peerId: string, trackId: string): Selector<object> =>
+  (snapshot: LibraryPeersState | null): object =>
+    snapshot?.remote[peerId]?.tracks[trackId]?.metadata || {};

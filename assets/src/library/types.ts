@@ -2,19 +2,21 @@ import { PeerMetadata } from "../pages/room/hooks/usePeerState";
 import { TrackType } from "../pages/types";
 import { TrackEncoding } from "@membraneframework/membrane-webrtc-js";
 
+export type TrackId = string;
+export type PeerId = string;
+
 export type LibraryTrackReady = {
   stream: MediaStream | null;
-  trackId: string;
+  trackId: TrackId;
   metadata: any | null; // eslint-disable-line @typescript-eslint/no-explicit-any
   encoding: TrackEncoding | null;
   track: MediaStreamTrack | null;
 };
 
-export type LibraryTrackAdded = LibraryTrackReady;
-export type LibraryTrack = LibraryTrackReady | LibraryTrackAdded;
+export type LibraryTrack = LibraryTrackReady;
 
 export type LibraryLocalPeer = {
-  id: string | null;
+  id: PeerId | null;
   // todo make PeerMetadata generic
   metadata: PeerMetadata | null;
   // todo rethink key - for now it is track type but it is not generic
@@ -22,25 +24,24 @@ export type LibraryLocalPeer = {
 };
 
 export type LibraryRemotePeer = {
-  id: string;
+  id: PeerId;
   // todo make PeerMetadata generic
   metadata: PeerMetadata | null;
-  tracks: Record<string, LibraryTrack>;
+  tracks: Record<TrackId, LibraryTrack>;
 };
 
 export type LibraryPeersState = {
   local: LibraryLocalPeer;
-  remote: Record<string, LibraryRemotePeer>;
+  remote: Record<PeerId, LibraryRemotePeer>;
 };
 
 // --- selectors
 export type Selector<Result> = (snapshot: LibraryPeersState | null) => Result;
 export type Subscribe = (onStoreChange: () => void) => () => void;
 
-
 export type LibraryTrackMinimal = {
   stream: MediaStream | null;
-  trackId: string;
+  trackId: TrackId;
   encoding: TrackEncoding | null;
   track: MediaStreamTrack | null;
 };

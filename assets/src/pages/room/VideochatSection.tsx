@@ -21,7 +21,7 @@ const prepareScreenSharingStreams = (
   const peersScreenSharingTracks: VideoStreamWithMetadata[] = peers
     .flatMap((peer) =>
       peer.tracks.map((track) => ({
-        peerId: peer.id,
+        id: peer.id,
         track: track,
         emoji: peer.emoji,
         peerName: peer.displayName,
@@ -37,7 +37,7 @@ const prepareScreenSharingStreams = (
           metadata: track.metadata,
         },
         mediaPlayerId: track.trackId,
-        peerId: peerId,
+        id: peerId,
         peerIcon: emoji,
         peerName: peerName,
       })
@@ -47,7 +47,7 @@ const prepareScreenSharingStreams = (
     ? [
         {
           video: localPeer?.tracks["screensharing"],
-          peerId: localPeer?.id,
+          id: localPeer?.id,
           peerIcon: localPeer?.metadata?.emoji,
           peerName: LOCAL_PEER_NAME,
           mediaPlayerId: LOCAL_SCREEN_SHARING_ID,
@@ -62,7 +62,7 @@ const prepareScreenSharingStreams = (
 
 export const VideochatSection: FC<Props> = ({ peers, localPeer, showSimulcast, webrtc, showDeveloperInfo, clientWrapper }: Props) => {
   const localUser: MediaPlayerTileConfig = {
-    peerId: localPeer?.id,
+    id: localPeer?.id,
     displayName: LOCAL_PEER_NAME,
     emoji: localPeer?.metadata?.emoji,
     video: localPeer?.tracks["camera"] ? [localPeer?.tracks["camera"]] : [],

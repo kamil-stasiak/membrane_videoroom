@@ -50,7 +50,7 @@ const mapRemotePeersToMediaPlayerConfig = (peers: RemotePeer[], showSimulcast?: 
     const screenSharingTracks: TrackWithId[] = getTracks(peer.tracks, "screensharing");
 
     return {
-      peerId: peer.id,
+      id: peer.id,
       emoji: peer.emoji,
       displayName: peer.displayName,
       video: videoTracks,
@@ -117,7 +117,7 @@ const Peer = ({ config, showDeveloperInfo, showSimulcast, webrtc, clientWrapper 
   return (
     <MediaPlayerTile
       key={config.mediaPlayerId}
-      peerId={config.peerId}
+      peerId={config.id}
       video={video}
       audioStream={audio?.stream}
       layers={
@@ -259,7 +259,7 @@ const MediaPlayerPeersSection: FC<Props> = ({
     >
       {allPeersConfig.map((config, idx) => (
         <Peer
-          key={config.peerId}
+          key={config.id}
           config={config}
           showDeveloperInfo={showDeveloperInfo}
           showSimulcast={showSimulcast}
