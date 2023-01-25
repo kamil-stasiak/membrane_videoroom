@@ -32,3 +32,15 @@ export type LibraryPeersState = {
   local: LibraryLocalPeer;
   remote: Record<string, LibraryRemotePeer>;
 };
+
+// --- selectors
+export type Selector<Result> = (snapshot: LibraryPeersState | null) => Result;
+export type Subscribe = (onStoreChange: () => void) => () => void;
+
+
+export type LibraryTrackMinimal = {
+  stream: MediaStream | null;
+  trackId: string;
+  encoding: TrackEncoding | null;
+  track: MediaStreamTrack | null;
+};

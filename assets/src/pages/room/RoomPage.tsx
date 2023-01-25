@@ -1,28 +1,18 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useState } from "react";
 import { AUDIO_TRACKS_CONFIG, SCREEN_SHARING_TRACKS_CONFIG, VIDEO_TRACKS_CONFIG } from "./consts";
 import { useMembraneClient, UseMembraneClientType } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
-import { ApiTrack, PeerMetadata } from "./hooks/usePeerState";
+import { PeerMetadata } from "./hooks/usePeerState";
 import { useToggle } from "./hooks/useToggle";
 import { getRandomAnimalEmoji } from "./utils";
 import { useStreamManager } from "./hooks/useStreamManager";
 import { StreamingMode } from "./hooks/useMembraneMediaStreaming";
 import { useAcquireWakeLockAutomatically } from "./hooks/useAcquireWakeLockAutomatically";
-import { TrackContext } from "@membraneframework/membrane-webrtc-js";
-import { isTrackType } from "../types";
 import { useClientErrorState } from "../../library/useClientErrorState";
-import { LibraryPeersState } from "../../library/types";
+import { LibraryTrackMinimal } from "../../library/types";
 import { UseLocalPeersState, useLocalPeerState } from "../../library/useLoclPeerState";
-import { useLocalPeerIdTODO } from "../../library/useLocalPeerIdTODO";
-import { UseTracksState, useTracksState } from "../../library/useTracksState";
-import { useTrackMetadata } from "../../library/useTrackMetadata";
-import { selectPeersIds, useLibraryPeersState2 } from "../../library/usePeersState2";
-import { useFullState2 } from "./UseFullState2";
-import { selectPeersIds2, Track3, useTracksState2 } from "../../library/useTracksState2";
-import { useLog } from "./UseLog";
-import { useWhyDidYouUpdate } from "../../library/whyDidYouRender";
-import { useTrackMetadata2 } from "../../library/useTrackMetadata2";
 import { useSelector } from "../../library/useSelector";
+import { createPeerIdsSelector, createTracksSelector, selectTrackMetadata } from "../../library/selectors";
 
 type TrackMetadataComponentProps = {
   peerId: string;
@@ -31,7 +21,7 @@ type TrackMetadataComponentProps = {
 };
 
 const TrackMetadataComponent = ({ peerId, trackId, membrane }: TrackMetadataComponentProps) => {
-  const metadata = useTrackMetadata2(membrane, peerId, trackId);
+  const metadata: object = useSelector(membrane, selectTrackMetadata(peerId, trackId));
 
   return (
     <div className="border-dashed border-2 border-indigo-600">
@@ -47,7 +37,7 @@ const TrackMetadataComponent = ({ peerId, trackId, membrane }: TrackMetadataComp
 type RemoteTrackComponentProps = {
   // remove peerId
   peerId: string;
-  track: Track3;
+  track: LibraryTrackMinimal;
   membrane: UseMembraneClientType;
 };
 
@@ -68,12 +58,7 @@ type VideoComponentProps = {
 };
 
 const RemotePeerComponent = ({ peerId, membrane }: VideoComponentProps) => {
-  // const tracksState: Array<Track3> = useTracksState2(membrane, peerId);
-  const tracksState: Array<Track3> = useSelector<Array<Track3>>(membrane, selectPeersIds2(peerId));
-
-  // useEffect(() => {
-  //   console.log({ name: "tracks", tracksState });
-  // }, [tracksState]);
+  const tracksState: Array<LibraryTrackMinimal> = useSelector(membrane, createTracksSelector(peerId));
 
   return (
     <div className="text-white border-dashed border-2 border-indigo-600">
@@ -94,39 +79,6 @@ type Props = {
 };
 
 export type SetErrorMessage = (value: string) => void;
-
-export const parseMetadata = (context: TrackContext) => {
-  const type = context.metadata.type;
-  const active = context.metadata.active;
-  return isTrackType(type) ? { type, active } : { active };
-};
-
-const subscribers: Array<() => void> = [];
-
-// function subscribe(callback) {
-//   window.addEventListener('online', callback);
-//   window.addEventListener('offline', callback);
-//   return () => {
-//     window.removeEventListener('online', callback);
-//     window.removeEventListener('offline', callback);
-//   };
-// }
-
-// const subscribe = (callback: () => void) => {
-//   // console.log("subscribe");
-//   //
-//   // subscribers.push(callback);
-//
-//   return () => {
-//     // console.log("unsubscribe");
-//   };
-// };
-
-// const getSnapshot = () => {
-//   console.log("getSnapshot");
-//   return "OK";
-// };
-//
 
 const RoomPage: FC<Props> = (props: Props) => {
   const { roomId, displayName, isSimulcastOn, manualMode, autostartStreaming } = props;
@@ -149,7 +101,7 @@ const RoomPage: FC<Props> = (props: Props) => {
   // useLocalPeerIdTODO(clientWrapper, peerMetadata, local.setLocalPeer);
 
   // const remotePeers: Array<string> = useLibraryPeersState2(clientWrapper);
-  const remotePeers: Array<string> = useSelector(clientWrapper, selectPeersIds);
+  const remotePeers: Array<string> = useSelector(clientWrapper, createPeerIdsSelector);
 
   // useFullState2(clientWrapper);
 
@@ -162,10 +114,6 @@ const RoomPage: FC<Props> = (props: Props) => {
 
   // const peersState: LibraryPeersState | null = useLibraryPeersState2(clientWrapper);
   const isConnected = clientWrapper?.webrtcConnectionStatus === "connected";
-
-  // useLog(remotePeers, "remotePeers");
-  // useLog(local, "local");
-  // useLog(state, "fullState");
 
   const camera = useStreamManager(
     "camera",
@@ -202,16 +150,6 @@ const RoomPage: FC<Props> = (props: Props) => {
     <section>
       <div className="flex flex-col h-screen relative">
         {errorMessage && <div className="bg-red-700 text-white p-1 w-full">{errorMessage}</div>}
-        {/*<button*/}
-        {/*  onClick={() =>*/}
-        {/*    subscribers.forEach((call) => {*/}
-        {/*      call();*/}
-        {/*    })*/}
-        {/*  }*/}
-        {/*>*/}
-        {/*  Click*/}
-        {/*</button>*/}
-
         {showDeveloperInfo && (
           <div className="absolute text-white text-shadow-lg right-0 top-0 p-2 flex flex-col text-right">
             <span className="ml-2">Is WakeLock supported: {wakeLock.isSupported ? "🟢" : "🔴"}</span>

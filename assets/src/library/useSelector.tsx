@@ -1,18 +1,18 @@
 import { Listener, UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
 import { useCallback, useMemo, useSyncExternalStore } from "react";
-import { LibraryPeersState } from "./types";
-import { cache } from "./usePeersState2";
-import { useLog } from "../pages/room/UseLog";
+import { useLog } from "../helpers/UseLog";
+import { cache } from "./cache";
+import { Selector, Subscribe } from "./types";
 
 export const useSelector = <Result,>(
   clientWrapper: UseMembraneClientType | null,
-  selector: (snapshot: LibraryPeersState | null) => Result
+  selector: Selector<Result>
 ): Result => {
-  const fn: (snapshot: LibraryPeersState | null) => Result = useMemo(() => cache(selector), [selector]);
+  const cachedSelector: Selector<Result> = useMemo(() => cache(selector), [selector]);
 
-  const subscribe: (onStoreChange: () => void) => () => void = useCallback(
+  const subscribe: Subscribe = useCallback(
     (listener: Listener) => {
-      const sub: ((onStoreChange: () => void) => () => void) | undefined = clientWrapper?.store?.subscribe;
+      const sub: Subscribe | undefined = clientWrapper?.store?.subscribe;
 
       // return () => {};
       // todo refactor add guard statement
@@ -26,12 +26,12 @@ export const useSelector = <Result,>(
   );
 
   const getSnapshotWithSelector = useCallback(() => {
-    return fn(clientWrapper?.store?.getSnapshot() || null);
-  }, [clientWrapper, fn]);
+    return cachedSelector(clientWrapper?.store?.getSnapshot() || null);
+  }, [clientWrapper, cachedSelector]);
 
-  const fullState: Result = useSyncExternalStore(subscribe, getSnapshotWithSelector);
+  const result: Result = useSyncExternalStore(subscribe, getSnapshotWithSelector);
 
-  useLog(fullState, "useSelector");
+  useLog(result, "useSelector");
 
-  return fullState;
+  return result;
 };
