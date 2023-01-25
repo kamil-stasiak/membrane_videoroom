@@ -14,6 +14,32 @@ const groupBy = <IN,>(arr: Array<IN>, criteria: (it: IN) => string): Record<stri
     return acc;
   }, {} as Record<string, Array<IN>>);
 
+const emptyArray = [];
+
+const cache = (callbackFunction: () => string[]): (() => string[]) => {
+  console.log("Outer cache function");
+  let cache: any = undefined;
+
+  return () => {
+    const result = callbackFunction();
+
+    if (isEqual(cache, result)) {
+      console.log("Return cache");
+      return cache;
+    }
+    console.log("Return new");
+
+    cache = result;
+
+    return cache;
+  };
+};
+
+// const cachedFunction: () => string[] = cache(() => {
+//   console.log("Inner cached function");
+//   return ["A", "B"];
+// });
+
 export const useLibraryPeersState2 = (clientWrapper: UseMembraneClientType | null): Array<string> => {
   // const fullState: LibraryPeersState | undefined = useFullState2(clientWrapper);
 
@@ -32,19 +58,41 @@ export const useLibraryPeersState2 = (clientWrapper: UseMembraneClientType | nul
     [clientWrapper]
   );
 
-  const prevValue = useRef<string[]>([]);
+  // const prevValue = useRef<string[]>([]);
 
-  const getSnapshot = useCallback(() => {
-    const remotePeers: Record<string, LibraryRemotePeer> | undefined =
-      clientWrapper?.store?.getSnapshot()?.remote || {};
-    const currentIds: string[] = Object.keys(remotePeers);
+  // const getSnapshot: () => string[] = useCallback(() => {
+  //   let prevValue: string[] = [];
+  //   console.log("calling outer!");
+  //   const outer = () => {
+  //     const remotePeers: Record<string, LibraryRemotePeer> | undefined =
+  //       clientWrapper?.store?.getSnapshot()?.remote || {};
+  //     const currentIds: string[] = Object.keys(remotePeers);
+  //
+  //     if (isEqual(currentIds, prevValue)) {
+  //       console.log("Prev value");
+  //       return prevValue;
+  //     }
+  //     console.log("New value");
+  //     prevValue = currentIds;
+  //     return prevValue;
+  //   };
+  //   return outer();
+  // }, [clientWrapper]);
+  //
 
-    if (isEqual(currentIds, prevValue.current)) return prevValue.current;
-    prevValue.current = currentIds;
-    return currentIds;
-  }, [clientWrapper]);
+  const selector: () => string[] = useCallback(
+    cache(() => {
+      console.log("Inner cached function");
+      const remotePeers: Record<string, LibraryRemotePeer> = clientWrapper?.store?.getSnapshot()?.remote || {};
+      const currentIds: string[] = Object.keys(remotePeers);
+      return currentIds;
+    }),
+    [clientWrapper]
+  );
 
-  const fullState: string[] = useSyncExternalStore(subscribe, getSnapshot);
+  const getSnapshotWithSelector = useCallback(() => selector(), [selector]);
+
+  const fullState: string[] = useSyncExternalStore(subscribe, getSnapshotWithSelector);
 
   // const [state, setState] = useState<Array<string>>([]);
   //
@@ -63,7 +111,7 @@ export const useLibraryPeersState2 = (clientWrapper: UseMembraneClientType | nul
   //     return remoteIds;
   //   });
   // }, [fullState]);
-  //
+
   useLog(fullState, "useLibraryPeersState2");
 
   return fullState;
