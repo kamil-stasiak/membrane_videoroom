@@ -29,6 +29,5 @@ export const useStreamManager = (
   useSetRemoteTrackId(type, peersApi.setLocalTrackId, remote.trackId);
   useSetLocalTrackMetadata(type, peersApi.setLocalTrackMetadata, remote.trackMetadata);
 
-
   return { local, remote };
 };

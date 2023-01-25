@@ -72,9 +72,9 @@ const RemotePeerComponent = ({ peerId, membrane }: VideoComponentProps) => {
   return (
     <div className="text-white border-dashed border-2 border-indigo-600">
       <h1>{peerId}</h1>
-      {tracksState.map((track) => (
-        <RemoteTrackComponent key={track?.trackId} track={track} membrane={membrane} />
-      ))}
+      {/*{tracksState.map((track) => (*/}
+      {/*  <RemoteTrackComponent key={track?.trackId} track={track} membrane={membrane} />*/}
+      {/*))}*/}
     </div>
   );
 };
@@ -121,10 +121,6 @@ const subscribers: Array<() => void> = [];
 //   return "OK";
 // };
 //
-function getSnapshot() {
-  console.log("SNAPSHOT!");
-  return navigator.onLine;
-}
 
 const RoomPage: FC<Props> = (props: Props) => {
   const { roomId, displayName, isSimulcastOn, manualMode, autostartStreaming } = props;
@@ -235,14 +231,14 @@ const RoomPage: FC<Props> = (props: Props) => {
               {/*))}*/}
             </h3>
           </header>
-          {/*{clientWrapper && (*/}
-          {/*  <>*/}
-          {/*    {local.id && <div className="text-white">{local.id}</div>}*/}
-          {/*    {remotePeers.map((peerId) => (*/}
-          {/*      <RemotePeerComponent key={peerId} membrane={clientWrapper} peerId={peerId} />*/}
-          {/*    ))}*/}
-          {/*  </>*/}
-          {/*)}*/}
+          {clientWrapper && (
+            <>
+              {local.id && <div className="text-white">{local.id}</div>}
+              {remotePeers.map((peerId) => (
+                <RemotePeerComponent key={peerId} membrane={clientWrapper} peerId={peerId} />
+              ))}
+            </>
+          )}
 
           {/*<VideochatSection*/}
           {/*  clientWrapper={clientWrapper}*/}
