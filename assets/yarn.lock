@@ -112,6 +112,13 @@
   dependencies:
     "@types/lodash" "*"
 
+"@types/lodash.isequal@^4.5.6":
+  "integrity" "sha512-Ww4UGSe3DmtvLLJm2F16hDwEQSv7U0Rr8SujLUA2wHI2D2dm8kPu6Et+/y303LfjTIwSBKXB/YTUcAKpem/XEg=="
+  "resolved" "https://registry.npmjs.org/@types/lodash.isequal/-/lodash.isequal-4.5.6.tgz"
+  "version" "4.5.6"
+  dependencies:
+    "@types/lodash" "*"
+
 "@types/lodash@*":
   "integrity" "sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ=="
   "resolved" "https://registry.npmjs.org/@types/lodash/-/lodash-4.14.191.tgz"
@@ -264,6 +271,13 @@
   dependencies:
     "@typescript-eslint/types" "5.45.0"
     "eslint-visitor-keys" "^3.3.0"
+
+"@welldone-software/why-did-you-render@^7.0.1":
+  "integrity" "sha512-Qe/8Xxa2G+LMdI6VoazescPzjjkHYduCDa8aHOJR50e9Bgs8ihkfMBY+ev7B4oc3N59Zm547Sgjf8h5y0FOyoA=="
+  "resolved" "https://registry.npmjs.org/@welldone-software/why-did-you-render/-/why-did-you-render-7.0.1.tgz"
+  "version" "7.0.1"
+  dependencies:
+    "lodash" "^4"
 
 "acorn-jsx@^5.3.2":
   "integrity" "sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ=="
@@ -1466,7 +1480,7 @@
   "resolved" "https://registry.npmjs.org/lodash.topath/-/lodash.topath-4.5.2.tgz"
   "version" "4.5.2"
 
-"lodash@^4.17.21":
+"lodash@^4", "lodash@^4.17.21":
   "integrity" "sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg=="
   "resolved" "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
   "version" "4.17.21"
@@ -1944,7 +1958,7 @@
   dependencies:
     "@remix-run/router" "1.0.4"
 
-"react@^16.13.1 || ^17.0.0 || ^18.0.0", "react@^18.2.0", "react@>=16.8":
+"react@^16 || ^17 || ^18", "react@^16.13.1 || ^17.0.0 || ^18.0.0", "react@^18.2.0", "react@>=16.8":
   "integrity" "sha512-/3IjMdb2L9QbBdWiW5e3P2/npwMBaU9mHCSCUzNln0ZCYbcfTsGbTJrU/kGemdH2IWmB2ioZ+zkxtmq6g09fGQ=="
   "resolved" "https://registry.npmjs.org/react/-/react-18.2.0.tgz"
   "version" "18.2.0"

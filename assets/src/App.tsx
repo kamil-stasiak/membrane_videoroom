@@ -6,13 +6,13 @@ import { UserProvider } from "./contexts/UserContext";
 
 const App: FC = () => {
   return (
-    <React.StrictMode>
+    // <React.StrictMode>
       <UserProvider>
         <DeveloperInfoProvider>
           <RouterProvider router={router} />
         </DeveloperInfoProvider>
       </UserProvider>
-    </React.StrictMode>
+    // </React.StrictMode>
   );
 };
 

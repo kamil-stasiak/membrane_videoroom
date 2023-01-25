@@ -1,13 +1,12 @@
 import { MembraneStreaming, StreamingMode, useMembraneMediaStreaming } from "./useMembraneMediaStreaming";
 import { useSetLocalUserTrack } from "./useSetLocalUserTrack";
-import { MembraneWebRTC } from "@membraneframework/membrane-webrtc-js";
 import { DisplayMediaStreamConfig, MediaStreamConfig, useMedia, UseMediaResult } from "./useMedia";
 import { TrackType } from "../../types";
 import { UseLocalPeersState } from "../../../library/useLoclPeerState";
 import { useSetRemoteTrackId } from "./useSetRemoteTrackId";
 import { useSetLocalTrackMetadata } from "./useSetLocalTrackMetadata";
 import { UseMembraneClientType } from "./useMembraneClient";
-import { useEffect } from "react";
+import { PeerMetadata } from "./usePeerState";
 
 export type Streams = {
   remote: MembraneStreaming;
@@ -21,7 +20,7 @@ export const useStreamManager = (
   simulcast: boolean,
   clientWrapper: UseMembraneClientType | null,
   config: MediaStreamConfig | DisplayMediaStreamConfig,
-  peersApi: UseLocalPeersState,
+  peersApi: UseLocalPeersState<PeerMetadata>,
   autostartStreaming?: boolean
 ): Streams => {
   const local = useMedia(config, autostartStreaming);

@@ -1,18 +1,17 @@
 import { Listener, UseMembraneClientType } from "./hooks/useMembraneClient";
 import { useCallback, useSyncExternalStore } from "react";
 import { useLog } from "./UseLog";
+import { LibraryPeersState } from "../../library/types";
 
 export const useFullState2 = (clientWrapper: UseMembraneClientType | null) => {
   const subscribe: (onStoreChange: () => void) => () => void = useCallback(
     (listener: Listener) => {
       const sub: ((onStoreChange: () => void) => () => void) | undefined = clientWrapper?.store?.subscribe;
 
+      // return () => {};
       // todo refactor add guard statement
       if (!sub) {
-        console.log("Empty subscribe");
-        return () => {
-          console.log("Empty unsubscribe");
-        };
+        return () => {};
       } else {
         return sub(listener);
       }
@@ -24,7 +23,7 @@ export const useFullState2 = (clientWrapper: UseMembraneClientType | null) => {
     return clientWrapper?.store.getSnapshot();
   }, [clientWrapper]);
 
-  const a = useSyncExternalStore(subscribe, getSnapshot);
-  useLog(a, "useSyncExternalStore");
-  return a
+  const a: LibraryPeersState | undefined = useSyncExternalStore(subscribe, getSnapshot);
+  // useLog(a, "fullState");
+  return a;
 };
