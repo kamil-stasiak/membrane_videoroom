@@ -135,7 +135,7 @@ const Peer = ({ peerId, showDeveloperInfo, showSimulcast, webrtc, clientWrapper 
   // const microphoneMetadataStatus = audio?.metadata?.active ? "🔊🟢" : "🔊🔴";
 
   const video: TrackWithId = useMemo(() => {
-    console.log("%c Creating new TrackWithId", "color: red")
+    // console.log("%c Creating new TrackWithId", "color: red")
 
     return { stream: tracks.camera?.stream || undefined };
   }, [tracks.camera]);

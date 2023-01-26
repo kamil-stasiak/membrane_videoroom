@@ -107,11 +107,13 @@ export const useMembraneMediaStreaming = (
   const updateTrackMetadata = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (metadata: any) => {
+      if(!clientWrapper?.api) return;
+
       if (!trackIds) return;
-      webrtcState?.updateTrackMetadata(trackIds.remoteId, metadata);
+      clientWrapper?.api?.updateTrackMetadata(trackIds.remoteId, metadata);
       setTrackMetadata(metadata);
     },
-    [webrtcState, trackIds]
+    [clientWrapper, trackIds]
   );
 
   const setActive = useCallback(

@@ -26,6 +26,7 @@ type MembraneApi = {
   ) => string;
   replaceTrack: (trackId: string, newTrack: MediaStreamTrack, newTrackMetadata?: any) => Promise<boolean>;
   removeTrack: (trackId: string) => void;
+  updateTrackMetadata: (trackId: string, trackMetadata: any) => void
 };
 
 export type UseMembraneClientType = {
@@ -369,6 +370,29 @@ export const useMembraneClient = (
           };
         });
       },
+
+      updateTrackMetadata: (trackId, trackMetadata) => {
+        webrtc.updateTrackMetadata(trackId, trackMetadata)
+
+        store.setStore((prevState: LibraryPeersState): LibraryPeersState => {
+          const prevTrack: LibraryTrack | null = prevState?.local?.tracks[trackId] || null;
+          if (!prevTrack) return prevState;
+
+          return {
+            ...prevState,
+            local: {
+              ...prevState.local,
+              tracks: {
+                ...prevState.local.tracks,
+                [trackId]: {
+                  ...prevTrack,
+                  metadata: trackMetadata ? { ...trackMetadata } : null,
+                },
+              },
+            },
+          };
+        })
+      }
     };
 
     signaling.on("mediaEvent", (event) => {
