@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { MembraneWebRTC } from "@membraneframework/membrane-webrtc-js";
 import { TrackType } from "../../types";
 import { selectBandwidthLimit } from "../bandwidth";
+import { UseMembraneClientType } from "./useMembraneClient";
 
 export type MembraneStreaming = {
   trackId: string | null;
@@ -24,8 +25,9 @@ export const useMembraneMediaStreaming = (
   type: TrackType,
   isConnected: boolean,
   simulcast: boolean,
-  webrtc?: MembraneWebRTC,
-  stream?: MediaStream
+  webrtc: MembraneWebRTC | null,
+  stream: MediaStream | null,
+  clientWrapper: UseMembraneClientType | null,
 ): MembraneStreaming => {
   const [trackIds, setTrackIds] = useState<TrackIds | null>(null);
   const [webrtcState, setWebrtcState] = useState<MembraneWebRTC | null>(webrtc || null);
@@ -34,13 +36,16 @@ export const useMembraneMediaStreaming = (
 
   const addTracks = useCallback(
     (stream: MediaStream) => {
+      console.log({ name: "Adding track", webrtc, clientWrapper })
       if (!webrtc) return;
+
+      if(!clientWrapper?.api) return;
       const tracks = type === "audio" ? stream.getAudioTracks() : stream.getVideoTracks();
 
       const track: MediaStreamTrack | undefined = tracks[0];
       if (!track) throw "Stream has no tracks!";
 
-      const remoteTrackId = webrtc.addTrack(
+      const remoteTrackId = clientWrapper.api.addTrack(
         track,
         stream,
         defaultTrackMetadata,
@@ -51,30 +56,32 @@ export const useMembraneMediaStreaming = (
       setTrackIds({ localId: track.id, remoteId: remoteTrackId });
       setTrackMetadata(defaultTrackMetadata);
     },
-    [defaultTrackMetadata, simulcast, type, webrtc]
+    [clientWrapper, defaultTrackMetadata, simulcast, type, webrtc]
   );
 
   const replaceTrack = useCallback(
     (stream: MediaStream) => {
       if (!webrtc || !trackIds) return;
+      if(!clientWrapper?.api) return;
       const tracks = type === "audio" ? stream.getAudioTracks() : stream.getVideoTracks();
 
       const track: MediaStreamTrack | undefined = tracks[0];
       if (!track) throw "Stream has no tracks!";
 
-      webrtc.replaceTrack(trackIds?.remoteId, track)
+      clientWrapper?.api?.replaceTrack(trackIds?.remoteId, track)
     },
-    [trackIds, type, webrtc]
+    [clientWrapper, trackIds, type, webrtc]
   );
 
   const removeTracks = useCallback(() => {
+    if(!clientWrapper?.api) return;
     setTrackIds(null);
     setTrackMetadata(undefined);
 
     if (!webrtc || !trackIds) return;
 
-    webrtc.removeTrack(trackIds.remoteId);
-  }, [webrtc, trackIds]);
+    clientWrapper?.api?.removeTrack(trackIds.remoteId);
+  }, [clientWrapper?.api, webrtc, trackIds]);
 
   useEffect(() => {
     if (!webrtc || !isConnected || mode !== "automatic") {

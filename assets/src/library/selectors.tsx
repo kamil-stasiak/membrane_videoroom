@@ -1,5 +1,11 @@
 import type { LibraryPeersState, Selector, LibraryTrackMinimal, PeerId, TrackId } from "./types";
 
+type CreateFullStateSelector = () => Selector<LibraryPeersState | null>;
+export const createFullStateSelector: CreateFullStateSelector =
+  (): Selector<LibraryPeersState | null> =>
+  (snapshot: LibraryPeersState | null): LibraryPeersState | null =>
+    snapshot || null;
+
 type CreatePeerIdsSelector = () => Selector<Array<PeerId>>;
 export const createPeerIdsSelector: CreatePeerIdsSelector =
   (): Selector<Array<PeerId>> =>
@@ -18,13 +24,14 @@ export const createTracksSelector: CreateTracksSelector =
   (snapshot: LibraryPeersState | null): Array<LibraryTrackMinimal> =>
     Object.values(snapshot?.remote[peerId]?.tracks || {}).map((track) => ({
       trackId: track.trackId,
-      encoding: track.encoding,
+      simulcastConfig: track.simulcastConfig ? { ...track.simulcastConfig } : null,
       stream: track.stream,
       track: track.track,
     }));
 
-type SelectTrackMetadata = (peerId: PeerId, trackId: TrackId) => Selector<object>;
-export const selectTrackMetadata: SelectTrackMetadata =
+// todo make generic
+type CreateTrackMetadataSelector = (peerId: PeerId, trackId: TrackId) => Selector<object>;
+export const createTrackMetadataSelector: CreateTrackMetadataSelector =
   (peerId: string, trackId: string): Selector<object> =>
   (snapshot: LibraryPeersState | null): object =>
     snapshot?.remote[peerId]?.tracks[trackId]?.metadata || {};

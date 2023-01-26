@@ -1,8 +1,9 @@
-import { Listener, UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
+import { UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import { useLog } from "../helpers/UseLog";
 import { cache } from "./cache";
 import { Selector, Subscribe } from "./types";
+import { Listener } from "./store";
 
 export const useSelector = <Result,>(
   clientWrapper: UseMembraneClientType | null,
@@ -31,7 +32,7 @@ export const useSelector = <Result,>(
 
   const result: Result = useSyncExternalStore(subscribe, getSnapshotWithSelector);
 
-  useLog(result, "useSelector");
+  // useLog(result, "useSelector");
 
   return result;
 };

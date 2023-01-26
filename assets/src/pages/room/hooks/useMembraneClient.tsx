@@ -3,21 +3,30 @@ import { MembraneWebRTC, Peer, SerializedMediaEvent, TrackContext } from "@membr
 import { Channel, Socket } from "phoenix";
 import { PeerMetadata } from "./usePeerState";
 import { SetErrorMessage } from "../RoomPage";
-import { Callbacks, TrackEncoding } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
+import {
+  Callbacks,
+  SimulcastConfig,
+  TrackBandwidthLimit,
+  TrackEncoding,
+} from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
 import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
-import { LibraryLocalPeer, LibraryPeersState, LibraryRemotePeer, LibraryTrackReady } from "../../../library/types";
+import { LibraryLocalPeer, LibraryPeersState, LibraryRemotePeer, LibraryTrack, TrackId } from "../../../library/types";
+import { createStore, Store } from "../../../library/store";
 
 export type ConnectionStatus = "before-connection" | "connected" | "connecting" | "error";
 
-type Store = {
-  getSnapshot: () => LibraryPeersState;
-  setStore: (setter: (prevState: LibraryPeersState) => LibraryPeersState) => void;
-  // subscribe: (listener: Listener) => void;
-  subscribe: (onStoreChange: () => void) => () => void;
+type MembraneApi = {
+  addTrack: (
+    track: MediaStreamTrack,
+    stream: MediaStream,
+    trackMetadata?: any,
+    simulcastConfig?: SimulcastConfig,
+    maxBandwidth?: TrackBandwidthLimit
+  ) => string;
+  replaceTrack: (trackId: string, newTrack: MediaStreamTrack, newTrackMetadata?: any) => Promise<boolean>;
+  removeTrack: (trackId: string) => void;
 };
-
-export type Listener = () => void;
 
 export type UseMembraneClientType = {
   webrtc: MembraneWebRTC;
@@ -26,36 +35,7 @@ export type UseMembraneClientType = {
   webrtcConnectionStatus: ConnectionStatus;
   signalingStatus: ConnectionStatus;
   store: Store;
-};
-
-// zustand przekazuje state and prev state gdy wywołuje listenera dzięki czemu może mu być łatwiej porównywać stany nowy i stary
-// listeners.forEach((listener) => listener(state, previousState))
-
-const createStore = (): Store => {
-  let listeners: Listener[] = [];
-  let store: LibraryPeersState = { local: { id: null, tracks: {}, metadata: null }, remote: {} };
-
-  const getSnapshot = (): LibraryPeersState => {
-    return store;
-  };
-
-  const subscribe: (onStoreChange: () => void) => () => void = (callback: Listener) => {
-    listeners = [...listeners, callback];
-
-    return () => {
-      listeners = listeners.filter((e) => e !== callback);
-    };
-  };
-
-  const setStore = (setter: (prevState: LibraryPeersState) => LibraryPeersState) => {
-    store = setter(store);
-
-    listeners.forEach((listener) => {
-      listener();
-    });
-  };
-
-  return { getSnapshot, subscribe, setStore };
+  api: MembraneApi | null;
 };
 
 // todo extract callbacks
@@ -103,6 +83,7 @@ export const useMembraneClient = (
             signalingStatus: "connected",
             webrtcConnectionStatus: "error",
             store,
+            api: null,
           });
           messageEmitter.emit("onConnectionError", message);
         },
@@ -110,14 +91,15 @@ export const useMembraneClient = (
         onJoinSuccess: (peerId, peersInRoom: [Peer]) => {
           console.log({ name: "onJoinSuccess", peerId, peersInRoom });
 
-          setState({
+          setState((prevState) => ({
             webrtc,
             messageEmitter,
             signaling,
             signalingStatus: "connected",
             webrtcConnectionStatus: "connected",
             store,
-          });
+            api: prevState?.api || null,
+          }));
           store.setStore(() => {
             const remote: Record<string, LibraryRemotePeer> = Object.fromEntries(
               new Map(
@@ -189,12 +171,18 @@ export const useMembraneClient = (
               ...prevState.remote,
             };
 
+            // todo fix this mutation
             remote[ctx.peer.id].tracks[ctx.trackId] = {
               trackId: ctx.trackId,
               metadata: ctx.metadata,
               stream: ctx.stream,
-              encoding: null,
               track: ctx.track,
+              simulcastConfig: ctx.simulcastConfig
+                ? {
+                    enabled: ctx.simulcastConfig.enabled,
+                    activeEncodings: [...ctx.simulcastConfig.active_encodings],
+                  }
+                : null,
             };
 
             return { ...prevState, remote: remote };
@@ -216,7 +204,12 @@ export const useMembraneClient = (
             remote[ctx.peer.id].tracks[ctx.trackId] = {
               trackId: ctx.trackId,
               metadata: ctx.metadata,
-              encoding: null,
+              simulcastConfig: ctx.simulcastConfig
+                ? {
+                    enabled: ctx.simulcastConfig.enabled,
+                    activeEncodings: [...ctx.simulcastConfig.active_encodings],
+                  }
+                : null,
               stream: ctx.stream,
               track: ctx.track,
             };
@@ -271,7 +264,7 @@ export const useMembraneClient = (
 
             const peer = remote[ctx.peer.id];
 
-            const track: LibraryTrackReady = {
+            const track: LibraryTrack = {
               ...peer.tracks[ctx.trackId],
               stream: ctx.stream,
               metadata: ctx.metadata,
@@ -301,6 +294,83 @@ export const useMembraneClient = (
       },
     });
 
+    const api: MembraneApi = {
+      addTrack: (
+        track: MediaStreamTrack,
+        stream: MediaStream,
+        trackMetadata?: any,
+        simulcastConfig?: SimulcastConfig,
+        maxBandwidth?: TrackBandwidthLimit
+      ) => {
+        const remoteTrackId = webrtc.addTrack(track, stream, trackMetadata, simulcastConfig, maxBandwidth);
+        store.setStore((prevState: LibraryPeersState): LibraryPeersState => {
+          return {
+            ...prevState,
+            local: {
+              ...prevState.local,
+              tracks: {
+                ...prevState.local.tracks,
+                [remoteTrackId]: {
+                  track: track,
+                  trackId: remoteTrackId,
+                  stream: stream,
+                  metadata: trackMetadata,
+                  simulcastConfig: simulcastConfig
+                    ? {
+                        enabled: simulcastConfig?.enabled,
+                        activeEncodings: [...simulcastConfig.active_encodings],
+                      }
+                    : null,
+                },
+              },
+            },
+          };
+        });
+        return remoteTrackId;
+      },
+
+      replaceTrack: (trackId, newTrack, newTrackMetadata) => {
+        const promise = webrtc.replaceTrack(trackId, newTrack, newTrackMetadata);
+        store.setStore((prevState: LibraryPeersState): LibraryPeersState => {
+          const prevTrack: LibraryTrack | null = prevState?.local?.tracks[trackId] || null;
+          if (!prevTrack) return prevState;
+
+          return {
+            ...prevState,
+            local: {
+              ...prevState.local,
+              tracks: {
+                ...prevState.local.tracks,
+                [trackId]: {
+                  ...prevTrack,
+                  track: newTrack,
+                  trackId: trackId,
+                  metadata: newTrackMetadata ? { ...newTrackMetadata } : null,
+                },
+              },
+            },
+          };
+        });
+        return promise;
+      },
+
+      removeTrack: (trackId) => {
+        webrtc.removeTrack(trackId);
+        store.setStore((prevState: LibraryPeersState): LibraryPeersState => {
+          const tracksCopy: Partial<Record<TrackId, LibraryTrack>> | undefined = prevState?.local?.tracks;
+          delete tracksCopy[trackId];
+
+          return {
+            ...prevState,
+            local: {
+              ...prevState.local,
+              tracks: tracksCopy,
+            },
+          };
+        });
+      },
+    };
+
     signaling.on("mediaEvent", (event) => {
       webrtc.receiveMediaEvent(event.data);
     });
@@ -316,6 +386,7 @@ export const useMembraneClient = (
       signalingStatus: "connecting",
       webrtcConnectionStatus: "before-connection",
       store,
+      api,
     });
 
     signaling
@@ -329,6 +400,7 @@ export const useMembraneClient = (
           signalingStatus: "connected",
           webrtcConnectionStatus: "connecting",
           store,
+          api,
         });
       })
       .receive("error", (response) => {
@@ -343,6 +415,7 @@ export const useMembraneClient = (
           signalingStatus: "error",
           webrtcConnectionStatus: "before-connection",
           store,
+          api,
         });
       });
 
