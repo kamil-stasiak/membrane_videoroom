@@ -1,15 +1,14 @@
 import { UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
 import { useCallback, useMemo, useSyncExternalStore } from "react";
-import { useLog } from "../helpers/UseLog";
 import { cache } from "./cache";
 import { Selector, Subscribe } from "./types";
 import { Listener } from "./store";
 
-export const useSelector = <Result,>(
-  clientWrapper: UseMembraneClientType | null,
-  selector: Selector<Result>
+export const useSelector = <Result, PeerMetadataGeneric, TrackMetadataGeneric>(
+  clientWrapper: UseMembraneClientType<PeerMetadataGeneric, TrackMetadataGeneric> | null,
+  selector: Selector<PeerMetadataGeneric, TrackMetadataGeneric, Result>
 ): Result => {
-  const cachedSelector: Selector<Result> = useMemo(() => cache(selector), [selector]);
+  const cachedSelector: Selector<PeerMetadataGeneric, TrackMetadataGeneric, Result> = useMemo(() => cache(selector), [selector]);
 
   const subscribe: Subscribe = useCallback(
     (listener: Listener) => {

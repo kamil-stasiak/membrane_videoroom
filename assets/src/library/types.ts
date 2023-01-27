@@ -1,50 +1,41 @@
-import { PeerMetadata } from "../pages/room/hooks/usePeerState";
-import { TrackType } from "../pages/types";
 import { TrackEncoding } from "@membraneframework/membrane-webrtc-js";
-import { SimulcastConfig } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
-
-
 
 export type TrackId = string;
 export type PeerId = string;
-export type Tracks = Record<TrackId, LibraryTrack>;
+export type Tracks<Metadata> = Record<TrackId, LibraryTrack<Metadata>>;
 
 export type LibrarySimulcastConfig = {
   enabled: boolean;
   activeEncodings: TrackEncoding[];
-}
+};
 
-export type LibraryTrack = {
+export type LibraryTrack<TrackMetadataGeneric> = {
   stream: MediaStream | null;
   trackId: TrackId;
-  metadata: any | null; // eslint-disable-line @typescript-eslint/no-explicit-any
-  // encoding: TrackEncoding | null;
+  metadata: TrackMetadataGeneric | null; // eslint-disable-line @typescript-eslint/no-explicit-any
   simulcastConfig: LibrarySimulcastConfig | null;
   track: MediaStreamTrack | null;
 };
 
-export type LibraryLocalPeer = {
+export type LibraryLocalPeer<PeerMetadataGeneric, TrackMetadataGeneric> = {
   id: PeerId | null;
-  // todo make PeerMetadata generic
-  metadata: PeerMetadata | null;
-  // todo rethink key - for now it is track type but it is not generic
-  tracks: Partial<Record<TrackId, LibraryTrack>>;
+  metadata: PeerMetadataGeneric | null;
+  tracks: Partial<Record<TrackId, LibraryTrack<TrackMetadataGeneric>>>;
 };
 
-export type LibraryRemotePeer = {
+export type LibraryRemotePeer<PeerMetadataGeneric, TrackMetadataGeneric> = {
   id: PeerId;
-  // todo make PeerMetadata generic
-  metadata: PeerMetadata | null;
-  tracks: Record<TrackId, LibraryTrack>;
+  metadata: PeerMetadataGeneric | null;
+  tracks: Record<TrackId, LibraryTrack<TrackMetadataGeneric>>;
 };
 
-export type LibraryPeersState = {
-  local: LibraryLocalPeer;
-  remote: Record<PeerId, LibraryRemotePeer>;
+export type LibraryPeersState<PeerMetadataGeneric, TrackMetadataGeneric> = {
+  local: LibraryLocalPeer<PeerMetadataGeneric, TrackMetadataGeneric>;
+  remote: Record<PeerId, LibraryRemotePeer<PeerMetadataGeneric, TrackMetadataGeneric>>;
 };
 
 // --- selectors
-export type Selector<Result> = (snapshot: LibraryPeersState | null) => Result;
+export type Selector<PeerM, TrackM, Result> = (snapshot: LibraryPeersState<PeerM, TrackM> | null) => Result;
 export type Subscribe = (onStoreChange: () => void) => () => void;
 
 export type LibraryTrackMinimal = {

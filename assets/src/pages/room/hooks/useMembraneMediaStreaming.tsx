@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { MembraneWebRTC } from "@membraneframework/membrane-webrtc-js";
 import { TrackType } from "../../types";
 import { selectBandwidthLimit } from "../bandwidth";
 import { UseMembraneClientType } from "./useMembraneClient";
+import { PeerMetadata, TrackMetadata } from "./usePeerState";
 
 export type MembraneStreaming = {
   trackId: string | null;
@@ -25,19 +25,16 @@ export const useMembraneMediaStreaming = (
   type: TrackType,
   isConnected: boolean,
   simulcast: boolean,
-  webrtc: MembraneWebRTC | null,
   stream: MediaStream | null,
-  clientWrapper: UseMembraneClientType | null,
+  clientWrapper: UseMembraneClientType<PeerMetadata, TrackMetadata> | null,
 ): MembraneStreaming => {
   const [trackIds, setTrackIds] = useState<TrackIds | null>(null);
-  const [webrtcState, setWebrtcState] = useState<MembraneWebRTC | null>(webrtc || null);
   const [trackMetadata, setTrackMetadata] = useState<any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
   const defaultTrackMetadata = useMemo(() => ({ active: true, type }), [type]);
 
   const addTracks = useCallback(
     (stream: MediaStream) => {
-      console.log({ name: "Adding track", webrtc, clientWrapper })
-      if (!webrtc) return;
+      console.log({ name: "addTracks", clientWrapper })
 
       if(!clientWrapper?.api) return;
       const tracks = type === "audio" ? stream.getAudioTracks() : stream.getVideoTracks();
@@ -56,12 +53,12 @@ export const useMembraneMediaStreaming = (
       setTrackIds({ localId: track.id, remoteId: remoteTrackId });
       setTrackMetadata(defaultTrackMetadata);
     },
-    [clientWrapper, defaultTrackMetadata, simulcast, type, webrtc]
+    [clientWrapper, defaultTrackMetadata, simulcast, type]
   );
 
   const replaceTrack = useCallback(
     (stream: MediaStream) => {
-      if (!webrtc || !trackIds) return;
+      if (!trackIds) return;
       if(!clientWrapper?.api) return;
       const tracks = type === "audio" ? stream.getAudioTracks() : stream.getVideoTracks();
 
@@ -70,7 +67,7 @@ export const useMembraneMediaStreaming = (
 
       clientWrapper?.api?.replaceTrack(trackIds?.remoteId, track)
     },
-    [clientWrapper, trackIds, type, webrtc]
+    [clientWrapper, trackIds, type]
   );
 
   const removeTracks = useCallback(() => {
@@ -78,31 +75,31 @@ export const useMembraneMediaStreaming = (
     setTrackIds(null);
     setTrackMetadata(undefined);
 
-    if (!webrtc || !trackIds) return;
+    if (!trackIds) return;
 
     clientWrapper?.api?.removeTrack(trackIds.remoteId);
-  }, [clientWrapper?.api, webrtc, trackIds]);
+  }, [clientWrapper, trackIds]);
 
   useEffect(() => {
-    if (!webrtc || !isConnected || mode !== "automatic") {
+    console.log({name: "autostart", clientWrapper, isConnected, mode})
+    if (!clientWrapper?.api || !isConnected || mode !== "automatic") {
       return;
     }
 
     const tracks = type === "audio" ? stream?.getAudioTracks() : stream?.getVideoTracks();
     const localTrackId: string | undefined = (tracks || [])[0]?.id;
 
+    console.log({name: "after autostart", clientWrapper, isConnected, mode})
+
     if (stream && !trackIds) {
+
       addTracks(stream);
     } else if (stream && trackIds && trackIds.localId !== localTrackId) {
       replaceTrack(stream);
     } else if (!stream && trackIds) {
       removeTracks();
     }
-  }, [webrtc, stream, isConnected, addTracks, mode, removeTracks, trackIds, replaceTrack, type]);
-
-  useEffect(() => {
-    setWebrtcState(webrtc || null);
-  }, [webrtc, type]);
+  }, [stream, isConnected, addTracks, mode, removeTracks, trackIds, replaceTrack, type, clientWrapper]);
 
   const updateTrackMetadata = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

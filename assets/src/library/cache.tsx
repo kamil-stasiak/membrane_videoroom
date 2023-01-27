@@ -1,9 +1,9 @@
 import { LibraryPeersState } from "./types";
 import isEqual from "lodash.isequal";
 
-export const cache = <T,>(
-  callbackFunction: (snapshot: LibraryPeersState | null) => T
-): ((snapshot: LibraryPeersState | null) => T) => {
+export const cache = <T, PeerMetadataGeneric, TrackMetadataGeneric>(
+  callbackFunction: (snapshot: LibraryPeersState<PeerMetadataGeneric, TrackMetadataGeneric> | null) => T
+): ((snapshot: LibraryPeersState<PeerMetadataGeneric, TrackMetadataGeneric> | null) => T) => {
   // console.log("%c Create cache", "color: orange");
   let cache: any = undefined;
 

@@ -6,7 +6,7 @@ import { UseLocalPeersState } from "../../../library/useLoclPeerState";
 import { useSetRemoteTrackId } from "./useSetRemoteTrackId";
 import { useSetLocalTrackMetadata } from "./useSetLocalTrackMetadata";
 import { UseMembraneClientType } from "./useMembraneClient";
-import { PeerMetadata } from "./usePeerState";
+import { PeerMetadata, TrackMetadata } from "./usePeerState";
 
 export type Streams = {
   remote: MembraneStreaming;
@@ -18,21 +18,13 @@ export const useStreamManager = (
   mode: StreamingMode,
   isConnected: boolean,
   simulcast: boolean,
-  clientWrapper: UseMembraneClientType | null,
+  clientWrapper: UseMembraneClientType<PeerMetadata, TrackMetadata> | null,
   config: MediaStreamConfig | DisplayMediaStreamConfig,
   peersApi: UseLocalPeersState<PeerMetadata>,
   autostartStreaming?: boolean
 ): Streams => {
   const local = useMedia(config, autostartStreaming);
-  const remote = useMembraneMediaStreaming(
-    mode,
-    type,
-    isConnected,
-    simulcast,
-    clientWrapper?.webrtc || null,
-    local.stream || null,
-    clientWrapper
-  );
+  const remote = useMembraneMediaStreaming(mode, type, isConnected, simulcast, local.stream || null, clientWrapper);
   useSetLocalUserTrack(type, peersApi.setLocalStream, local.stream, local.isEnabled);
   useSetRemoteTrackId(type, peersApi.setLocalTrackId, remote.trackId);
   useSetLocalTrackMetadata(type, peersApi.setLocalTrackMetadata, remote.trackMetadata);

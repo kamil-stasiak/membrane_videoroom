@@ -6,6 +6,7 @@ import { NavigateFunction, useNavigate } from "react-router-dom";
 import { MembraneStreaming, StreamingMode } from "../hooks/useMembraneMediaStreaming";
 import { useToggle } from "../hooks/useToggle";
 import { UseMembraneClientType } from "../hooks/useMembraneClient";
+import { PeerMetadata, TrackMetadata } from "../hooks/usePeerState";
 
 type ControlButton = MediaControlButtonProps & { id: string };
 
@@ -295,7 +296,7 @@ type LocalUserMediaControls = {
   audioStreaming: MembraneStreaming;
   displayMedia: UseMediaResult;
   screenSharingStreaming: MembraneStreaming;
-  clientWrapper: UseMembraneClientType | null;
+  clientWrapper: UseMembraneClientType<PeerMetadata, TrackMetadata> | null;
 };
 
 const MediaControlButtons: FC<Props> = (props: Props) => {

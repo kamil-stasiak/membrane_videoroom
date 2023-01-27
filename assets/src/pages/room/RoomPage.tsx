@@ -2,23 +2,17 @@ import React, { FC, useState } from "react";
 import { AUDIO_TRACKS_CONFIG, SCREEN_SHARING_TRACKS_CONFIG, VIDEO_TRACKS_CONFIG } from "./consts";
 import { useMembraneClient, UseMembraneClientType } from "./hooks/useMembraneClient";
 import MediaControlButtons from "./components/MediaControlButtons";
-import { PeerMetadata } from "./hooks/usePeerState";
+import { PeerMetadata, TrackMetadata } from "./hooks/usePeerState";
 import { useToggle } from "./hooks/useToggle";
 import { getRandomAnimalEmoji } from "./utils";
 import { useStreamManager } from "./hooks/useStreamManager";
 import { StreamingMode } from "./hooks/useMembraneMediaStreaming";
 import { useAcquireWakeLockAutomatically } from "./hooks/useAcquireWakeLockAutomatically";
 import { useClientErrorState } from "../../library/useClientErrorState";
-import { LibraryPeersState, LibraryTrackMinimal, PeerId } from "../../library/types";
+import { LibraryPeersState } from "../../library/types";
 import { UseLocalPeersState, useLocalPeerState } from "../../library/useLoclPeerState";
 import { useSelector } from "../../library/useSelector";
-import {
-  createPeerIdsSelector,
-  createTracksIdsSelector,
-  createTracksSelector,
-  createTrackMetadataSelector,
-  createFullStateSelector,
-} from "../../library/selectors";
+import { createTracksIdsSelector, createTrackMetadataSelector, createFullStateSelector } from "../../library/selectors";
 import { createPeersGuiSelector, PeerGui } from "../../library/customSelectors";
 import { VideochatSection } from "./VideochatSection";
 import { useLog } from "../../helpers/UseLog";
@@ -26,7 +20,7 @@ import { useLog } from "../../helpers/UseLog";
 type TrackMetadataComponentProps = {
   peerId: string;
   trackId: string;
-  membrane: UseMembraneClientType;
+  membrane: UseMembraneClientType<PeerMetadata, TrackMetadata>;
 };
 
 const TrackMetadataComponent = ({ peerId, trackId, membrane }: TrackMetadataComponentProps) => {
@@ -47,7 +41,7 @@ type RemoteTrackComponentProps = {
   // remove peerId
   peerId: string;
   trackId: string;
-  membrane: UseMembraneClientType;
+  membrane: UseMembraneClientType<PeerMetadata, TrackMetadata>;
 };
 
 const RemoteTrackComponent = ({ trackId, membrane, peerId }: RemoteTrackComponentProps) => {
@@ -61,7 +55,7 @@ const RemoteTrackComponent = ({ trackId, membrane, peerId }: RemoteTrackComponen
 
 type VideoComponentProps = {
   peerId: string;
-  membrane: UseMembraneClientType;
+  membrane: UseMembraneClientType<PeerMetadata, TrackMetadata>;
 };
 
 const RemotePeerComponent = ({ peerId, membrane }: VideoComponentProps) => {
@@ -99,19 +93,20 @@ const RoomPage: FC<Props> = (props: Props) => {
   const [peerMetadata] = useState<PeerMetadata>({ emoji: getRandomAnimalEmoji(), displayName });
 
   const local: UseLocalPeersState<PeerMetadata> = useLocalPeerState<PeerMetadata>();
-  const clientWrapper: UseMembraneClientType | null = useMembraneClient(
-    roomId,
-    peerMetadata,
-    isSimulcastOn,
-    setErrorMessage
-  );
+  const clientWrapper: UseMembraneClientType<PeerMetadata, TrackMetadata> | null = useMembraneClient<
+    PeerMetadata,
+    TrackMetadata
+  >(roomId, peerMetadata, isSimulcastOn, setErrorMessage);
   // useLocalPeerIdTODO(clientWrapper, peerMetadata, local.setLocalPeer);
 
   const remotePeers: Array<PeerGui> = useSelector(clientWrapper, createPeersGuiSelector());
   useClientErrorState(clientWrapper, setErrorMessage);
   const isConnected = clientWrapper?.webrtcConnectionStatus === "connected";
 
-  const fullState: LibraryPeersState | null = useSelector(clientWrapper, createFullStateSelector());
+  const fullState: LibraryPeersState<PeerMetadata, TrackMetadata> | null = useSelector(
+    clientWrapper,
+    createFullStateSelector()
+  );
   useLog(fullState, "fullState");
 
   const camera = useStreamManager(

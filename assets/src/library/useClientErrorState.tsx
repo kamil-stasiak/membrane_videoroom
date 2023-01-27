@@ -2,8 +2,9 @@ import { UseMembraneClientType } from "../pages/room/hooks/useMembraneClient";
 import { Callbacks } from "@membraneframework/membrane-webrtc-js/dist/membraneWebRTC";
 import { useEffect, useMemo } from "react";
 
-export const useClientErrorState = (
-  clientWrapper: UseMembraneClientType | null,
+// TODO remove
+export const useClientErrorState = <GenericPeerMetadata, GenericTrackMetadata>(
+  clientWrapper: UseMembraneClientType<GenericPeerMetadata, GenericTrackMetadata> | null,
   setErrorMessage: (value: string) => void
 ) => {
   const callbacks: Partial<Callbacks> = useMemo(

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { MembraneWebRTC, Peer, SerializedMediaEvent, TrackContext } from "@membraneframework/membrane-webrtc-js";
 import { Channel, Socket } from "phoenix";
-import { PeerMetadata } from "./usePeerState";
 import { SetErrorMessage } from "../RoomPage";
 import {
   Callbacks,
@@ -13,44 +12,36 @@ import EventEmitter from "events";
 import TypedEmitter from "typed-emitter";
 import { LibraryLocalPeer, LibraryPeersState, LibraryRemotePeer, LibraryTrack, TrackId } from "../../../library/types";
 import { createStore, Store } from "../../../library/store";
+import { MembraneApi } from "../../../library/api";
 
 export type ConnectionStatus = "before-connection" | "connected" | "connecting" | "error";
 
-type MembraneApi = {
-  addTrack: (
-    track: MediaStreamTrack,
-    stream: MediaStream,
-    trackMetadata?: any,
-    simulcastConfig?: SimulcastConfig,
-    maxBandwidth?: TrackBandwidthLimit
-  ) => string;
-  replaceTrack: (trackId: string, newTrack: MediaStreamTrack, newTrackMetadata?: any) => Promise<boolean>;
-  removeTrack: (trackId: string) => void;
-  updateTrackMetadata: (trackId: string, trackMetadata: any) => void
-};
-
-export type UseMembraneClientType = {
+export type UseMembraneClientType<PeerMetadataGeneric, TrackMetadataGeneric> = {
   webrtc: MembraneWebRTC;
   messageEmitter: TypedEmitter<Partial<Callbacks>>;
   signaling: Channel;
   webrtcConnectionStatus: ConnectionStatus;
   signalingStatus: ConnectionStatus;
-  store: Store;
-  api: MembraneApi | null;
+  store: Store<PeerMetadataGeneric, TrackMetadataGeneric>;
+  api: MembraneApi<TrackMetadataGeneric> | null;
 };
 
 // todo extract callbacks
-export const useMembraneClient = (
+export const useMembraneClient = <PeerMetadataGeneric, TrackMetadataGeneric>(
   roomId: string,
-  peerMetadata: PeerMetadata,
+  peerMetadata: PeerMetadataGeneric,
   isSimulcastOn: boolean,
   setErrorMessage: SetErrorMessage
-): UseMembraneClientType | null => {
-  const [state, setState] = useState<UseMembraneClientType | null>(null);
+): UseMembraneClientType<PeerMetadataGeneric, TrackMetadataGeneric> | null => {
+  type StateShorthand = LibraryPeersState<PeerMetadataGeneric, TrackMetadataGeneric>;
+  type LocalPeerShorthand = LibraryLocalPeer<PeerMetadataGeneric, TrackMetadataGeneric>;
+  type RemotePeerShorthand = LibraryRemotePeer<PeerMetadataGeneric, TrackMetadataGeneric>;
+
+  const [state, setState] = useState<UseMembraneClientType<PeerMetadataGeneric, TrackMetadataGeneric> | null>(null);
 
   useEffect(() => {
     const messageEmitter: TypedEmitter<Partial<Callbacks>> = new EventEmitter() as TypedEmitter<Partial<Callbacks>>;
-    const store = createStore();
+    const store = createStore<PeerMetadataGeneric, TrackMetadataGeneric>();
 
     const socket = new Socket("/socket");
     socket.connect();
@@ -101,8 +92,8 @@ export const useMembraneClient = (
             store,
             api: prevState?.api || null,
           }));
-          store.setStore(() => {
-            const remote: Record<string, LibraryRemotePeer> = Object.fromEntries(
+          store.setStore((): StateShorthand => {
+            const remote: Record<string, RemotePeerShorthand> = Object.fromEntries(
               new Map(
                 peersInRoom.map((peer) => [
                   peer.id,
@@ -116,7 +107,11 @@ export const useMembraneClient = (
             );
 
             // todo add your own metadata
-            const local: LibraryLocalPeer = { id: peerId, metadata: {}, tracks: {} };
+            const local: LocalPeerShorthand = {
+              id: peerId,
+              metadata: null,
+              tracks: {},
+            };
 
             return { local, remote };
           });
@@ -131,8 +126,8 @@ export const useMembraneClient = (
         onPeerJoined: (peer) => {
           console.log({ name: "onPeerJoined", peer });
 
-          store.setStore((prevState: LibraryPeersState) => {
-            const remote: Record<string, LibraryRemotePeer> = {
+          store.setStore((prevState: StateShorthand) => {
+            const remote: Record<string, RemotePeerShorthand> = {
               ...prevState.remote,
               [peer.id]: { id: peer.id, metadata: peer.metadata, tracks: {} },
             };
@@ -144,8 +139,8 @@ export const useMembraneClient = (
         onPeerLeft: (peer) => {
           console.log({ name: "onPeerLeft", peer });
 
-          store.setStore((prevState: LibraryPeersState) => {
-            const remote: Record<string, LibraryRemotePeer> = {
+          store.setStore((prevState: StateShorthand) => {
+            const remote: Record<string, RemotePeerShorthand> = {
               ...prevState.remote,
             };
 
@@ -163,12 +158,12 @@ export const useMembraneClient = (
         onTrackReady: (ctx) => {
           console.log({ name: "onTrackReady", ctx });
 
-          store.setStore((prevState: LibraryPeersState) => {
+          store.setStore((prevState: StateShorthand) => {
             if (!ctx.stream) return prevState;
             if (!ctx.peer) return prevState;
             if (!ctx.trackId) return prevState;
 
-            const remote: Record<string, LibraryRemotePeer> = {
+            const remote: Record<string, RemotePeerShorthand> = {
               ...prevState.remote,
             };
 
@@ -193,11 +188,11 @@ export const useMembraneClient = (
         onTrackAdded: (ctx) => {
           console.log({ name: "onTrackAdded", ctx });
 
-          store.setStore((prevState: LibraryPeersState) => {
+          store.setStore((prevState: StateShorthand) => {
             if (!ctx.peer) return prevState;
             if (!ctx.trackId) return prevState;
 
-            const remote: Record<string, LibraryRemotePeer> = {
+            const remote: Record<string, RemotePeerShorthand> = {
               ...prevState.remote,
             };
 
@@ -222,11 +217,11 @@ export const useMembraneClient = (
         onTrackRemoved: (ctx) => {
           console.log({ name: "onTrackRemoved", ctx });
 
-          store.setStore((prevState: LibraryPeersState) => {
+          store.setStore((prevState: StateShorthand) => {
             if (!ctx.peer) return prevState;
             if (!ctx.trackId) return prevState;
 
-            const remote: Record<string, LibraryRemotePeer> = {
+            const remote: Record<string, RemotePeerShorthand> = {
               ...prevState.remote,
             };
 
@@ -239,8 +234,8 @@ export const useMembraneClient = (
         onTrackEncodingChanged: (peerId: string, trackId: string, encoding: TrackEncoding) => {
           console.log({ name: "onTrackEncodingChanged", peerId, trackId, encoding });
 
-          store.setStore((prevState: LibraryPeersState) => {
-            const remote: Record<string, LibraryRemotePeer> = {
+          store.setStore((prevState: StateShorthand) => {
+            const remote: Record<string, RemotePeerShorthand> = {
               ...prevState.remote,
             };
 
@@ -258,14 +253,14 @@ export const useMembraneClient = (
         onTrackUpdated: (ctx: TrackContext) => {
           console.log({ name: "onTrackUpdated", ctx });
 
-          store.setStore((prevState: LibraryPeersState) => {
-            const remote: Record<string, LibraryRemotePeer> = {
+          store.setStore((prevState: StateShorthand) => {
+            const remote: Record<string, RemotePeerShorthand> = {
               ...prevState.remote,
             };
 
             const peer = remote[ctx.peer.id];
 
-            const track: LibraryTrack = {
+            const track: LibraryTrack<TrackMetadataGeneric> = {
               ...peer.tracks[ctx.trackId],
               stream: ctx.stream,
               metadata: ctx.metadata,
@@ -295,16 +290,16 @@ export const useMembraneClient = (
       },
     });
 
-    const api: MembraneApi = {
+    const api: MembraneApi<TrackMetadataGeneric> = {
       addTrack: (
         track: MediaStreamTrack,
         stream: MediaStream,
-        trackMetadata?: any,
+        trackMetadata?: TrackMetadataGeneric,
         simulcastConfig?: SimulcastConfig,
         maxBandwidth?: TrackBandwidthLimit
       ) => {
         const remoteTrackId = webrtc.addTrack(track, stream, trackMetadata, simulcastConfig, maxBandwidth);
-        store.setStore((prevState: LibraryPeersState): LibraryPeersState => {
+        store.setStore((prevState: StateShorthand): StateShorthand => {
           return {
             ...prevState,
             local: {
@@ -315,7 +310,7 @@ export const useMembraneClient = (
                   track: track,
                   trackId: remoteTrackId,
                   stream: stream,
-                  metadata: trackMetadata,
+                  metadata: trackMetadata || null,
                   simulcastConfig: simulcastConfig
                     ? {
                         enabled: simulcastConfig?.enabled,
@@ -332,8 +327,8 @@ export const useMembraneClient = (
 
       replaceTrack: (trackId, newTrack, newTrackMetadata) => {
         const promise = webrtc.replaceTrack(trackId, newTrack, newTrackMetadata);
-        store.setStore((prevState: LibraryPeersState): LibraryPeersState => {
-          const prevTrack: LibraryTrack | null = prevState?.local?.tracks[trackId] || null;
+        store.setStore((prevState: StateShorthand): StateShorthand => {
+          const prevTrack: LibraryTrack<TrackMetadataGeneric> | null = prevState?.local?.tracks[trackId] || null;
           if (!prevTrack) return prevState;
 
           return {
@@ -357,8 +352,8 @@ export const useMembraneClient = (
 
       removeTrack: (trackId) => {
         webrtc.removeTrack(trackId);
-        store.setStore((prevState: LibraryPeersState): LibraryPeersState => {
-          const tracksCopy: Partial<Record<TrackId, LibraryTrack>> | undefined = prevState?.local?.tracks;
+        store.setStore((prevState: StateShorthand): StateShorthand => {
+          const tracksCopy: Partial<Record<TrackId, LibraryTrack<TrackMetadataGeneric>>> | undefined = prevState?.local?.tracks;
           delete tracksCopy[trackId];
 
           return {
@@ -372,10 +367,10 @@ export const useMembraneClient = (
       },
 
       updateTrackMetadata: (trackId, trackMetadata) => {
-        webrtc.updateTrackMetadata(trackId, trackMetadata)
+        webrtc.updateTrackMetadata(trackId, trackMetadata);
 
-        store.setStore((prevState: LibraryPeersState): LibraryPeersState => {
-          const prevTrack: LibraryTrack | null = prevState?.local?.tracks[trackId] || null;
+        store.setStore((prevState: StateShorthand): StateShorthand => {
+          const prevTrack: LibraryTrack<TrackMetadataGeneric> | null = prevState?.local?.tracks[trackId] || null;
           if (!prevTrack) return prevState;
 
           return {
@@ -391,8 +386,8 @@ export const useMembraneClient = (
               },
             },
           };
-        })
-      }
+        });
+      },
     };
 
     signaling.on("mediaEvent", (event) => {
