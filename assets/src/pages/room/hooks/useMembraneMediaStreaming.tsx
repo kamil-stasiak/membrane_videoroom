@@ -9,8 +9,8 @@ export type MembraneStreaming = {
   removeTracks: () => void;
   addTracks: (stream: MediaStream) => void;
   setActive: (status: boolean) => void;
-  updateTrackMetadata: (metadata: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
-  trackMetadata: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  updateTrackMetadata: (metadata: TrackMetadata) => void;
+  trackMetadata: TrackMetadata | null;
 };
 
 export type StreamingMode = "manual" | "automatic";
@@ -26,17 +26,17 @@ export const useMembraneMediaStreaming = (
   isConnected: boolean,
   simulcast: boolean,
   stream: MediaStream | null,
-  clientWrapper: UseMembraneClientType<PeerMetadata, TrackMetadata> | null,
+  clientWrapper: UseMembraneClientType<PeerMetadata, TrackMetadata> | null
 ): MembraneStreaming => {
   const [trackIds, setTrackIds] = useState<TrackIds | null>(null);
-  const [trackMetadata, setTrackMetadata] = useState<any>(); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [trackMetadata, setTrackMetadata] = useState<TrackMetadata | null>(null);
   const defaultTrackMetadata = useMemo(() => ({ active: true, type }), [type]);
 
   const addTracks = useCallback(
     (stream: MediaStream) => {
-      console.log({ name: "addTracks", clientWrapper })
+      console.log({ name: "addTracks", clientWrapper });
 
-      if(!clientWrapper?.api) return;
+      if (!clientWrapper?.api) return;
       const tracks = type === "audio" ? stream.getAudioTracks() : stream.getVideoTracks();
 
       const track: MediaStreamTrack | undefined = tracks[0];
@@ -59,21 +59,21 @@ export const useMembraneMediaStreaming = (
   const replaceTrack = useCallback(
     (stream: MediaStream) => {
       if (!trackIds) return;
-      if(!clientWrapper?.api) return;
+      if (!clientWrapper?.api) return;
       const tracks = type === "audio" ? stream.getAudioTracks() : stream.getVideoTracks();
 
       const track: MediaStreamTrack | undefined = tracks[0];
       if (!track) throw "Stream has no tracks!";
 
-      clientWrapper?.api?.replaceTrack(trackIds?.remoteId, track)
+      clientWrapper?.api?.replaceTrack(trackIds?.remoteId, track);
     },
     [clientWrapper, trackIds, type]
   );
 
   const removeTracks = useCallback(() => {
-    if(!clientWrapper?.api) return;
+    if (!clientWrapper?.api) return;
     setTrackIds(null);
-    setTrackMetadata(undefined);
+    setTrackMetadata(null);
 
     if (!trackIds) return;
 
@@ -81,7 +81,7 @@ export const useMembraneMediaStreaming = (
   }, [clientWrapper, trackIds]);
 
   useEffect(() => {
-    console.log({name: "autostart", clientWrapper, isConnected, mode})
+    console.log({ name: "autostart", clientWrapper, isConnected, mode });
     if (!clientWrapper?.api || !isConnected || mode !== "automatic") {
       return;
     }
@@ -89,10 +89,9 @@ export const useMembraneMediaStreaming = (
     const tracks = type === "audio" ? stream?.getAudioTracks() : stream?.getVideoTracks();
     const localTrackId: string | undefined = (tracks || [])[0]?.id;
 
-    console.log({name: "after autostart", clientWrapper, isConnected, mode})
+    console.log({ name: "after autostart", clientWrapper, isConnected, mode });
 
     if (stream && !trackIds) {
-
       addTracks(stream);
     } else if (stream && trackIds && trackIds.localId !== localTrackId) {
       replaceTrack(stream);
@@ -102,9 +101,8 @@ export const useMembraneMediaStreaming = (
   }, [stream, isConnected, addTracks, mode, removeTracks, trackIds, replaceTrack, type, clientWrapper]);
 
   const updateTrackMetadata = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (metadata: any) => {
-      if(!clientWrapper?.api) return;
+    (metadata: TrackMetadata) => {
+      if (!clientWrapper?.api) return;
 
       if (!trackIds) return;
       clientWrapper?.api?.updateTrackMetadata(trackIds.remoteId, metadata);
@@ -114,7 +112,9 @@ export const useMembraneMediaStreaming = (
   );
 
   const setActive = useCallback(
-    (status: boolean) => updateTrackMetadata({ ...trackMetadata, active: status }),
+    (status: boolean) => {
+      updateTrackMetadata({ ...trackMetadata, active: status });
+    },
     [trackMetadata, updateTrackMetadata]
   );
 

@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from "react";
 import { TrackEncoding } from "@membraneframework/membrane-webrtc-js";
 import { TrackType } from "../../types";
 
+// todo delete this file
+
 export type ApiTrack = {
   trackId: string;
   mediaStreamTrack?: MediaStreamTrack;
@@ -27,7 +29,9 @@ export type NewPeer = {
 };
 
 export type TrackMetadata = {
+  // todo do we need TrackType?
   type?: TrackType;
+  active: boolean;
 };
 
 export type PeersState = {

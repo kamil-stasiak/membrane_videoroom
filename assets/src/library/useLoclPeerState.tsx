@@ -1,47 +1,46 @@
 import { useCallback, useMemo, useState } from "react";
 import { TrackType } from "../pages/types";
-import { Tracks } from "../pages/room/hooks/usePeerState";
+import { TrackMetadata, Tracks } from "../pages/room/hooks/usePeerState";
 
-export type SetLocalPeer<Metadata> = (id: string, metadata?: Metadata) => void;
+export type SetLocalPeer<GenericPeerMetadata> = (id: string, metadata?: GenericPeerMetadata) => void;
 export type SetLocalStream = (type: TrackType, enabled: boolean, stream: MediaStream | undefined) => void;
 export type SetLocalTrackId = (type: TrackType, trackId: string | null) => void;
-export type SetLocalTrackMetadata = (type: TrackType, metadata?: any) => void; // eslint-disable-line @typescript-eslint/no-explicit-any
+export type SetLocalTrackMetadata = (type: TrackType, metadata: TrackMetadata | null) => void;
 
-export type LocalPeerApi<Metadata> = {
-  setLocalPeer: SetLocalPeer<Metadata>;
+export type LocalPeerApi<GenericPeerMetadata> = {
+  setLocalPeer: SetLocalPeer<GenericPeerMetadata>;
   setLocalStream: SetLocalStream;
   setLocalTrackId: SetLocalTrackId;
   setLocalTrackMetadata: SetLocalTrackMetadata;
 };
 
-export type LocalPeerState<Metadata> = {
+export type LocalPeerState<GenericPeerMetadata> = {
   id?: string;
-  metadata?: Metadata;
+  metadata: GenericPeerMetadata | null;
   tracks: Tracks;
 };
 
-export type UseLocalPeersState<Metadata> = LocalPeerState<Metadata> & LocalPeerApi<Metadata>;
+export type UseLocalPeersState<GenericPeerMetadata> = LocalPeerState<GenericPeerMetadata> & LocalPeerApi<GenericPeerMetadata>;
 
-export const useLocalPeerState = <Metadata,>(): UseLocalPeersState<Metadata> => {
-  const [state, setState] = useState<LocalPeerState<Metadata>>({ tracks: {} });
+export const useLocalPeerState = <GenericPeerMetadata,>(): UseLocalPeersState<GenericPeerMetadata> => {
+  const [state, setState] = useState<LocalPeerState<GenericPeerMetadata>>({ tracks: {}, metadata: null });
 
-  const setLocalPeer = useCallback((id: string, metadata?: Metadata) => {
-    setState((prevState: LocalPeerState<Metadata>) => {
+  const setLocalPeer = useCallback((id: string, metadata: GenericPeerMetadata | null) => {
+    setState((prevState: LocalPeerState<GenericPeerMetadata>) => {
       return { ...prevState, id: id, metadata: metadata };
     });
   }, []);
 
   const setLocalStream = useCallback((type: TrackType, enabled: boolean, stream?: MediaStream) => {
-    setState((prevState: LocalPeerState<Metadata>) => {
+    setState((prevState: LocalPeerState<GenericPeerMetadata>) => {
       const newTrack = { ...prevState.tracks[type], enabled, stream };
 
       return { ...prevState, tracks: { ...prevState.tracks, [type]: newTrack } };
     });
   }, []);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const setLocalTrackMetadata = useCallback((type: TrackType, metadata: any) => {
-    setState((prevState: LocalPeerState<Metadata>) => {
+  const setLocalTrackMetadata = useCallback((type: TrackType, metadata: GenericPeerMetadata) => {
+    setState((prevState: LocalPeerState<GenericPeerMetadata>) => {
       const newTrack = { ...prevState.tracks[type], metadata };
 
       return { ...prevState, tracks: { ...prevState.tracks, [type]: newTrack } };
@@ -49,14 +48,15 @@ export const useLocalPeerState = <Metadata,>(): UseLocalPeersState<Metadata> => 
   }, []);
 
   const setLocalTrackId = useCallback((type: TrackType, trackId: string | null) => {
-    setState((prevState: LocalPeerState<Metadata>) => {
+    setState((prevState: LocalPeerState<GenericPeerMetadata>) => {
       const newTrack = { ...prevState.tracks[type], trackId };
 
       return { ...prevState, tracks: { ...prevState.tracks, [type]: newTrack } };
     });
   }, []);
 
-  const result: UseLocalPeersState<Metadata> = useMemo(() => {
+  // todo FIX ME NOW!!
+  const result: UseLocalPeersState<GenericPeerMetadata> = useMemo(() => {
     return {
       setLocalStream,
       setLocalTrackId,
