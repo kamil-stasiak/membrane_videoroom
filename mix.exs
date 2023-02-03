@@ -32,6 +32,7 @@ defmodule VideoRoom.MixProject do
        github: "jellyfish-dev/membrane_rtc_engine", branch: "update-rtp-rtx", override: true},
       {:membrane_webrtc_plugin,
        github: "jellyfish-dev/membrane_webrtc_plugin", branch: "add-ignored-ssrcs", override: true},
+      {:membrane_core, github: "membraneframework/membrane_core", branch: "poc-fake-push-0.11", override: true},
       {:membrane_rtp_plugin,
        github: "membraneframework/membrane_rtp_plugin", branch: "fix-outbound-rtx-v2", override: true},
       {:membrane_rtc_engine_timescaledb, "~> 0.1.0", runtime: false},
