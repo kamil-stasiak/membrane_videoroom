@@ -96,6 +96,10 @@ defmodule Videoroom.Room do
         {Videoroom.Room.Monitor, [self(), room_id]}
       )
 
+    Process.send_after(self(), :get_stats, 300)
+
+    file = File.open!("stats", [:write, :binary])
+
     {:ok,
      %{
        room_id: room_id,
@@ -103,7 +107,8 @@ defmodule Videoroom.Room do
        peer_channels: %{},
        network_options: network_options,
        trace_ctx: trace_ctx,
-       simulcast?: simulcast?
+       simulcast?: simulcast?,
+       file: file
      }}
   end
 
@@ -230,7 +235,22 @@ defmodule Videoroom.Room do
     end
   end
 
-  defp filter_codecs(%Encoding{name: "H264", format_params: fmtp}) do
+  @impl true
+  def handle_info(:get_stats, state) do
+
+    if :ets.whereis(:membrane_core_meas) == :undefined do
+      :ets.new(:membrane_core_meas, [:named_table, :public, write_concurrency: true])
+    end
+
+    stats = :ets.tab2list(:membrane_core_meas)
+
+    IO.binwrite(state.file, :erlang.term_to_binary(stats) <> "#dupadupa#")
+
+    Process.send_after(self(), :get_stats, 300)
+    {:noreply, state}
+  end
+
+  defp filter_codecs({%{encoding: "H264"}, format_params: fmtp}) do
     import Bitwise
 
     # Only accept constrained baseline
