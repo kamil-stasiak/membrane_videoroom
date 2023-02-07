@@ -41,7 +41,7 @@ defmodule VideoRoom.MixProject do
       {:membrane_rtc_engine_timescaledb, "~> 0.1.0", runtime: false},
       {:membrane_ice_plugin,
        github: "jellyfish-dev/membrane_ice_plugin", branch: "fix_typo", override: true},
-      {:fake_turn, path: "../fake_turn", override: true},
+      {:fake_turn, github: "jellyfish-dev/fake_turn", override: true},
       {:plug_cowboy, "~> 2.5.2"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},
