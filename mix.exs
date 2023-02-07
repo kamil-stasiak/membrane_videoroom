@@ -31,10 +31,12 @@ defmodule VideoRoom.MixProject do
       {:membrane_rtc_engine,
        github: "jellyfish-dev/membrane_rtc_engine", branch: "update-rtp-rtx", override: true},
       {:membrane_webrtc_plugin,
-       github: "jellyfish-dev/membrane_webrtc_plugin", branch: "MV-100-handle-rtx"},
+       github: "jellyfish-dev/membrane_webrtc_plugin", branch: "add-ignored-ssrcs", override: true},
       {:membrane_rtp_plugin,
-       github: "membraneframework/membrane_rtp_plugin", branch: "RTC-112-outbound-rtx-v2"},
+       github: "membraneframework/membrane_rtp_plugin", branch: "fix-outbound-rtx-v2", override: true},
       {:membrane_rtc_engine_timescaledb, "~> 0.1.0", runtime: false},
+      {:membrane_ice_plugin, github: "jellyfish-dev/membrane_ice_plugin", branch: "fix_typo", override: true},
+      {:fake_turn, path: "../fake_turn", override: true},
       {:plug_cowboy, "~> 2.5.2"},
       {:phoenix, "~> 1.6"},
       {:phoenix_html, "~> 3.0"},
@@ -55,7 +57,7 @@ defmodule VideoRoom.MixProject do
       # Otel
       {:opentelemetry, "~> 1.0"},
       {:opentelemetry_api, "~> 1.0"},
-      {:opentelemetry_exporter, "~> 1.0"},
+      {:opentelemetry_exporter, "~> 1.0.0"},
       {:opentelemetry_zipkin, "~> 1.0"},
 
       # Benchmarks
