@@ -237,7 +237,6 @@ defmodule Videoroom.Room do
 
   @impl true
   def handle_info(:get_stats, state) do
-
     if :ets.whereis(:membrane_core_meas) == :undefined do
       :ets.new(:membrane_core_meas, [:named_table, :public, write_concurrency: true])
     end
@@ -250,7 +249,7 @@ defmodule Videoroom.Room do
     {:noreply, state}
   end
 
-  defp filter_codecs({%{encoding: "H264"}, format_params: fmtp}) do
+  defp filter_codecs(%Encoding{name: "H264", format_params: fmtp}) do
     import Bitwise
 
     # Only accept constrained baseline
