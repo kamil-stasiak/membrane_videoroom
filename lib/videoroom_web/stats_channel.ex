@@ -1,4 +1,5 @@
 defmodule VideoRoomWeb.StatsChannel do
+  @moduledoc false
   use Phoenix.Channel
 
   @impl true
