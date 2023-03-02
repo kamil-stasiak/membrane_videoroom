@@ -97,8 +97,8 @@ port = 4000
 args =
   if protocol == :https do
     [
-      keyfile: get_env.("KEY_FILE_PATH", "priv/certs/key.pem"),
-      certfile: get_env.("CERT_FILE_PATH", "priv/certs/certificate.pem"),
+      keyfile: "~/mkcert/localhost-key.pem",
+      certfile: "~/mkcert/localhost.pem",
       cipher_suite: :strong
     ]
   else

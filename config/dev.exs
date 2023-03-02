@@ -1,6 +1,14 @@
 import Config
 
 config :membrane_videoroom_demo, VideoRoomWeb.Endpoint,
+  http: [ip: {0, 0, 0, 0}, port: 4000],
+  https: [
+    ip: {0, 0, 0, 0},
+    port: 4001,
+    cipher_suite: :strong,
+    keyfile: "~/mkcert/localhost-key.pem",
+    certfile: "~/mkcert/localhost.pem",
+  ],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
